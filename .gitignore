@@ -1,0 +1,22 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/OrderManagementSystem.Application/bin/Debug/net10.0
+/OrderManagementSystem.Application/obj
+/OrderManagementSystem.Application/OrderManagementSystem.Application.csproj
+/OrderManagementSystem.Domain/bin/Debug/net10.0
+/OrderManagementSystem.Domain/obj
+/OrderManagementSystem.Domain/OrderManagementSystem.Domain.csproj
+/OrderManagementSystem.Infrastructure/bin/Debug/net10.0
+/OrderManagementSystem.Infrastructure/obj
+/OrderManagementSystem.Infrastructure/OrderManagementSystem.Infrastructure.csproj
+/OrderManagementSystem.Persistence/bin/Debug/net10.0
+/OrderManagementSystem.Persistence/obj
+/OrderManagementSystem.Persistence/OrderManagementSystem.Persistence.csproj
+/OrderManagementSystem.Wpf/bin/Debug/net10.0-windows
+/OrderManagementSystem.Wpf/obj
+/OrderManagementSystem.Wpf/OrderManagementSystem.Wpf.csproj
+/OrderManagement.slnx
+/OrderManagementSystem.Wpf/OrderManagementSystem.Wpf.csproj.user
