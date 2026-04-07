@@ -14,7 +14,8 @@
     <Color x:Key="InfoColor">#0EA5E9</Color>
 
     <Color x:Key="BackgroundColor">#F8FAFC</Color>
-    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceColor">#FFFFFF</Color> <!-- Card Color -->
+    <Color x:Key="CardShadowColor">#8A795D</Color> <!-- Card Shadow Color -->
     <Color x:Key="BorderColor">#E2E8F0</Color>
     <Color x:Key="TextPrimaryColor">#1E293B</Color>
     <Color x:Key="TextSecondaryColor">#64748B</Color>
@@ -22,10 +23,19 @@
     <!-- Brushes Styles -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
     <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDarkColor}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource SecondaryColor}"/>
+    
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
-    <SolidColorBrush x:Key="TextBrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}"/>
+    
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/> <!-- Card Brush -->
+    <SolidColorBrush x:Key="CardShadowBrush" Color="{StaticResource CardShadowColor}"/> <!-- Card Shadow Brush -->
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
     
     
 </ResourceDictionary>

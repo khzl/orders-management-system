@@ -5,8 +5,38 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+             d:DesignWidth="250">
+
+    <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/> <!-- Star Size -->
+                    <ColumnDefinition Width="Auto"/> <!-- Auto Size -->
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="txtTitle" Text="Total Orders"
+                           Style="{StaticResource TextMuted}"
+                           FontWeight="Medium"/>
+
+                <Border Grid.Column="1" Background="#EEF2FF" CornerRadius="8" Padding="8">
+                    <TextBlock Text="📈" FontSize="16"/>
+                </Border>
+            </Grid>
+
+            <TextBlock x:Name="txtValue" Text="1,250"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                <TextBlock Text="+12%" Foreground="{StaticResource SuccessBrush}"
+                           FontSize="12" FontWeight="SemiBold"/>
+                <TextBlock Text=" Since Last Month" Style="{StaticResource TextMuted}"
+                           FontSize="12" Margin="5,0,0,0"/>
+            </StackPanel>
             
-    </Grid>
+        </StackPanel>
+        
+    </Border>
+    
 </UserControl>

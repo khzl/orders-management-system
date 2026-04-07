@@ -22,5 +22,30 @@ namespace OrderManagementSystem.Wpf.Components
         {
             InitializeComponent();
         }
+
+        // Dependency Property for Title
+        public string Title
+        {
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
+        }
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(CardComponent), new PropertyMetadata("", (d, e) => {
+                ((CardComponent)d).txtTitle.Text = e.NewValue.ToString();
+            }));
+
+
+        // Dependency Property for Value
+        public string Value
+        {
+            get { return (string)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value); }
+        }
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value", typeof(string), typeof(CardComponent), new PropertyMetadata("", (d, e) => {
+                ((CardComponent)d).txtValue.Text = e.NewValue.ToString();
+            }));
+
+
     }
 }

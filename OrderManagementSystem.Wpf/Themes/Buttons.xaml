@@ -3,8 +3,9 @@
     
     <!-- Buttons Styles -->
     <!-- BaseButtonStyles -->
+    
     <Style x:Key="BaseButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/> <!-- Dynamic -->
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -48,19 +49,19 @@
     
     <!-- Success Button Style Inheritance From Base Button Styles -->
     <Style x:Key="SuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource SuccessBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/> <!-- Dynamic -->
     </Style>
     
     <!-- Danger Button Style Inheritance From Base Button Styles -->
     <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource DangerBrush}"/> <!-- Dynamic -->
     </Style>
     
     <!-- Outline Button Style Inheritance Base Button Styles -->
     <Style x:Key="OutlineButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource TextBrimaryBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/> <!-- Dynamic -->
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/> <!-- Dynamic -->
         <Setter Property="BorderThickness" Value="1"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">

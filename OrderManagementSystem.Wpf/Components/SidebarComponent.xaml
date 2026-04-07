@@ -5,8 +5,59 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+             d:DesignHeight="600" d:DesignWidth="240">
+    
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,1,0">
+
+        <Grid>
             
-    </Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Auto Size -->
+                <RowDefinition Height="*"/> <!-- Star Size -->
+                <RowDefinition Height="Auto"/> <!-- Auto Size -->
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0"
+                        Margin="20,30,20,40"
+                        Orientation="Horizontal">
+                <Border Width="35" Height="35"
+                        Background="{StaticResource PrimaryBrush}"
+                        CornerRadius="8">
+                    <TextBlock Text="O" Foreground="White" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontSize="18"/>
+                </Border>
+                <TextBlock Text="OMS Pro" FontSize="20" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           Margin="12,0,0,0"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Margin="10,0">
+                <RadioButton Content="Dashboard"
+                             IsChecked="True"
+                             Style="{StaticResource SidebarMenuStyle}"
+                             GroupName="Menu"/>
+                <RadioButton Content="Customers"
+                             Style="{StaticResource SidebarMenuStyle}"
+                             GroupName="Menu"/>
+                <RadioButton Content="Orders"
+                             Style="{StaticResource SidebarMenuStyle}"
+                             GroupName="Menu"/>
+                <RadioButton Content="Products"
+                             Style="{StaticResource SidebarMenuStyle}"
+                             GroupName="Menu"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Margin="10,20">
+                <RadioButton Content="Settings"
+                             Style="{StaticResource SidebarMenuStyle}"/>
+                <Separator Background="{StaticResource BorderBrush}" Margin="10,15"/>
+                <Button Style="{StaticResource OutlineButtonStyle}" Content="Logout"
+                        Margin="5"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </UserControl>

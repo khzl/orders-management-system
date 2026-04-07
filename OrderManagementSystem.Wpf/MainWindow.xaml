@@ -4,39 +4,79 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OrderManagementSystem.Wpf"
+        xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
+        xmlns:viewModels="clr-namespace:OrderManagementSystem.Wpf.ViewModels"
+        xmlns:views="clr-namespace:OrderManagementSystem.Wpf.Components"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Orders Management System" Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
+            <views:DashboardComponent/>
+        </DataTemplate>
+    </Window.Resources>
+    
     <Grid>
-        
+
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/> <!-- Fixed Size -->
+            <ColumnDefinition Width="260"/>
+            <!-- Fixed Size -->
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Background="#2C3E50">
+        <components:SidebarComponent Grid.Column="0"/>
 
-            <Button Content="Dashboard"
-                    Command="{Binding ShowDashboardCommand}"/>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <!-- fixed Size -->
+                <RowDefinition Height="*"/>
+                <!-- Star Size -->
+            </Grid.RowDefinitions>
 
-            <Button Content="Customers"
-                    Command="{Binding ShowCustomersCommand}"/>
+            <Border Grid.Row="0"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource  BorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="30,0">
+                <DockPanel LastChildFill="False">
+                    
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Welcome back Khazaal..!    "
+                                   Style="{StaticResource TextHeading2}"
+                                   Margin="0" VerticalAlignment="Center"/>
+                    </StackPanel>
 
-            <Button Content="Orders"
-                    Command="{Binding ShowOrdersCommand}"/>
+                    <StackPanel DockPanel.Dock="Right"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <components:CustomButtonComponent x:Name="btnNewOrder"
+                                                          Width="140" Height="38"
+                                                          Margin="0,0,20,0"/>
+                        <Ellipse Width="40" Height="40"
+                                 Fill="{StaticResource PrimaryBrush}"
+                                 Stroke="{StaticResource BorderBrush}"
+                                 StrokeThickness="1"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
 
-            <Button Content="Products"
-                    Command="{Binding ShowProductsCommand}"/>
-
-            <Button Content="Order Details"
-                    Command="{Binding ShowOrderDetailsCommand}"/>
-
-            <Button Content="Settings"
-                    Command="{Binding ShowSettingsCommand}"/>
-            
-        </StackPanel>
-        
-        <!-- Content Area -->
-        <ContentControl Grid.Column="1"
-                        Content="{Binding NavigationService.CurrentViewModel}"/>
+            <Border Grid.Row="1" Padding="30">
+                <ContentControl Content="{Binding NavigationService.CurrentViewModel}">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate>
+                            <Grid RenderTransformOrigin="0.5,0.5">
+                                <Grid.RenderTransform>
+                                    <TranslateTransform Y="10"/>
+                                </Grid.RenderTransform>
+                                <ContentPresenter Content="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
