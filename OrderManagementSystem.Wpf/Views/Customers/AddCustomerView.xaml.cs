@@ -10,14 +10,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace OrderManagementSystem.Wpf.Views
+namespace OrderManagementSystem.Wpf.Views.Customers
 {
     /// <summary>
-    /// Interaction logic for CustomersView.xaml
+    /// Interaction logic for AddCustomerView.xaml
     /// </summary>
-    public partial class CustomersView : Window
+    public partial class AddCustomerView : Window
     {
-        public CustomersView()
+        public AddCustomerView()
         {
             InitializeComponent();
         }

@@ -9,10 +9,10 @@ namespace OrderManagementSystem.Application.Services
     public class OrderService //IOrderService
     {
         // DbContext
-        private readonly DbContext _context;
+        private readonly AppDbContext _context;
 
         // Constructor 
-        public OrderService(DbContext context)
+        public OrderService(AppDbContext context)
         {
             _context = context;
         }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OrderManagementSystem.Wpf.Services.Dialog
+namespace OrderManagementSystem.Wpf.ClientService.Dialog
 {
     public interface IDialogService
     {

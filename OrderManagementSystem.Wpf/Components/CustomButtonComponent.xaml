@@ -19,7 +19,7 @@
                        Visibility="Visible"/>
 
             <TextBlock x:Name="txtText"
-                       Text="Click Me"
+                       Text="Add"
                        VerticalAlignment="Center"/>
         </StackPanel>
         

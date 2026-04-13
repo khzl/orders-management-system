@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 
-namespace OrderManagementSystem.Wpf.Services.Dialog
+namespace OrderManagementSystem.Wpf.ClientService.Dialog
 {
     public class DialogService : IDialogService
     {

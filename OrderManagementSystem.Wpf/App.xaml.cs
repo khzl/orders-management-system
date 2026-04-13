@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OrderManagementSystem.Application;
-using OrderManagementSystem.Wpf.Services.Dialog;
-using System.Configuration;
-using System.Data;
+using System.IO;
 using System.Windows;
 using Applications = System.Windows.Application; // Solution Here
-using OrderManagementSystem.Wpf.ViewModels;
-using OrderManagementSystem.Wpf.Services;
-using OrderManagementSystem.Wpf.Services.Navigation;
+using OrderManagementSystem.Infrastructure;
+using OrderManagementSystem.Infrastructure.DBContext;
+using OrderManagementSystem.Wpf.ViewModels.Customers;
 
 namespace OrderManagementSystem.Wpf
 {
@@ -16,39 +15,49 @@ namespace OrderManagementSystem.Wpf
     /// </summary>
     public partial class App : Applications
     {
-        //public static IServiceProvider? ServiceProvider { get; private set; }
+        public static IServiceProvider? ServiceProvider { get; private set; }
+        public IConfiguration Configuration { get; private set; } = default!;
 
-        //protected override void OnStartup(StartupEventArgs e)
-        //{
-        //    base.OnStartup(e);
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
 
-        //    // dialogService
-        //    var dialogService = new DialogService();
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
-        //    // Create Factory  حسب نوع ViewModel
-        //    var navigationService = new NavigationService(viewModelType =>
-        //    {
-        //        if (viewModelType == typeof(DashboardViewModel))
-        //            return new DashboardViewModel();
-        //        if (viewModelType == typeof(OrdersViewModel))
-        //            return new OrdersViewModel(dialogService); // here Injection
-        //        if (viewModelType == typeof(SettingsViewModel))
-        //            return new SettingsViewModel();
+            Configuration = builder.Build();
 
-        //        throw new InvalidOperationException($"Unknown ViewModel: {viewModelType.Name}");
-        //    });
+            var services = new ServiceCollection();
 
-        //    var mainViewModel = new MainViewModel(navigationService);
+            ConfigureServices(services);
 
-        //    var mainWindow = new MainWindow
-        //    {
-        //        DataContext = mainViewModel // هنا يصير الربط
-        //    };
+            ServiceProvider = services.BuildServiceProvider();
 
-        //    mainWindow.Show();
+            var mainWWindow = ServiceProvider.GetRequiredService<MainWindow>();
+            mainWWindow.Show();
+        }
 
-        //}
+        private void ConfigureServices(IServiceCollection services)
+        {
+            // register the IConfiguration instance (non-nullable)
+            services.AddSingleton<IConfiguration>(Configuration);
 
+            // call DataAccess (Infrastructure)
+            // this line register DbContext , IDbconnection , Repositories
+            services.AddDataLayer(Configuration);
+
+            // call application Layer (Application)
+            // this line register Services
+            services.AddBusinessLayer();
+
+            // ViewModels Registers (DI)
+            services.AddTransient<CustomersViewModel>();
+            services.AddTransient<AddCustomerViewModel>();
+
+            // UI Registers (DI)
+            services.AddSingleton<MainWindow>();
+        }
     }
 
 }
