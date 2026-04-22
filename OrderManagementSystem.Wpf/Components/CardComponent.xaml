@@ -4,39 +4,55 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
+             xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
              mc:Ignorable="d" 
              d:DesignWidth="250">
 
+    <UserControl.Resources>
+        <converters:ColorToLightBrushConverter x:Key="ColorToLightBrushConverter"/>
+    </UserControl.Resources>
+
     <Border Style="{StaticResource CardStyle}">
         <StackPanel>
-            <Grid Margin="0,0,0,10">
+            <Grid Margin="0,0,0,15">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/> <!-- Star Size -->
-                    <ColumnDefinition Width="Auto"/> <!-- Auto Size -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Star Size -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Auto Size -->
                 </Grid.ColumnDefinitions>
 
-                <TextBlock x:Name="txtTitle" Text="Total Orders"
-                           Style="{StaticResource TextMuted}"
-                           FontWeight="Medium"/>
+                <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                           Foreground="#64748B" FontSize="14" FontWeight="SemiBold"/>
 
-                <Border Grid.Column="1" Background="#EEF2FF" CornerRadius="8" Padding="8">
-                    <TextBlock Text="📈" FontSize="16"/>
+                <Border Grid.Column="1" Width="40" Height="40" 
+                        Background="#F1F5F9" CornerRadius="10">
+                    <TextBlock Text="{Binding Icon, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
             </Grid>
 
-            <TextBlock x:Name="txtValue" Text="1,250"
-                       FontSize="24" FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontSize="28" FontWeight="Bold" Foreground="#1E293B"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                <TextBlock Text="+12%" Foreground="{StaticResource SuccessBrush}"
-                           FontSize="12" FontWeight="SemiBold"/>
-                <TextBlock Text=" Since Last Month" Style="{StaticResource TextMuted}"
-                           FontSize="12" Margin="5,0,0,0"/>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Border Padding="6,2" CornerRadius="6" 
+                        Background="{Binding TrendBrush, RelativeSource={RelativeSource AncestorType=UserControl}, 
+                        Converter={StaticResource ColorToLightBrushConverter}}"
+                        Margin="0,0,8,0">
+                    <TextBlock Text="{Binding Trend, 
+                               RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               Foreground="{Binding TrendBrush, 
+                               RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               FontSize="12" FontWeight="Bold"/>
+                </Border>
+
+                <TextBlock Text="{Binding Description, 
+                           RelativeSource={RelativeSource AncestorType=UserControl}}"
+                           Foreground="#94A3B8" FontSize="12" 
+                           VerticalAlignment="Center"/>
             </StackPanel>
-            
+
         </StackPanel>
-        
     </Border>
-    
 </UserControl>

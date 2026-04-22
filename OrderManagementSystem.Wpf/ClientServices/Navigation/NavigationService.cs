@@ -1,4 +1,5 @@
-﻿using OrderManagementSystem.Wpf.Helper;
+﻿using OrderManagementSystem.Wpf.ClientServices.Navigation;
+using OrderManagementSystem.Wpf.Helper;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,10 +39,15 @@ namespace OrderManagementSystem.Wpf.ClientService.Navigation
         public void NavigateTo<TViewModel>(object? parameter) where TViewModel : BaseViewModel
         {
             var viewModel = _viewModelFactory(typeof(TViewModel)) as TViewModel
-                ?? throw new InvalidOperationException($"Cannot Create ViewModel of Type {typeof(TViewModel).Name}");
+               ?? throw new InvalidOperationException($"Cannot Create ViewModel of Type {typeof(TViewModel).Name}");
+
+            // Solution Here 
+            if (parameter != null && viewModel is Iloadable loadableViewModel)
+            {
+                loadableViewModel.Load(parameter);
+            }
 
             CurrentViewModel = viewModel;
         }
-
     }
 }

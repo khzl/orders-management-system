@@ -2,26 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf"
-             StartupUri="MainWindow.xaml">
+             xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
+             >
+       <!--StartupUri="MainWindow.xaml"-->
     <Application.Resources>
         
         <!-- Wrap everything in a ResourceDictionary (owner of MergedDictionaries) -->
         <ResourceDictionary>
-
-            <!-- DataTemplate For ContentControl -->
-            <!-- الربط النهائي -->
-            <!--<DataTemplate DataType="{x:Type vm:DashboardViewModel}">
-                <localView:DashboardView/>
-            </DataTemplate>
-
-            <DataTemplate DataType="{x:Type vm:OrdersViewModel}">
-                <localView:OrdersView/>
-            </DataTemplate>
-
-            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
-                <localView:SettingsView/>
-            </DataTemplate>-->
-
             
             <!-- Here Add Themes in This Resources -->
             <ResourceDictionary.MergedDictionaries>
@@ -32,7 +19,7 @@
                 <ResourceDictionary Source="/Themes/Typography.xaml"/>
                 <ResourceDictionary Source="/Themes/DataGrid.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
+            
         </ResourceDictionary>
         
     </Application.Resources>

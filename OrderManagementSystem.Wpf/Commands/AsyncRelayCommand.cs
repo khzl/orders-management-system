@@ -27,6 +27,7 @@ namespace OrderManagementSystem.Wpf.Commands
         // يمنع التنفيذ المتكرر أثناء انتظار الـ async
         public bool CanExecute(object? parameter) => !_isExecuting && (_canExecute == null || _canExecute(parameter));
 
+
         public async void Execute(object? parameter)
         {
             if (!CanExecute(parameter)) return;

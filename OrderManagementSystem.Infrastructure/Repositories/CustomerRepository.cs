@@ -6,6 +6,7 @@ using Dapper;
 using System.Data;
 using OrderManagementSystem.Infrastructure.DBContext;
 using OrderManagementSystem.Domain.Entities;
+using System.Data.Common;
 
 namespace OrderManagementSystem.Infrastructure.Repositories
 {
@@ -29,11 +30,31 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
 
-            var customers = await connection.QueryAsync<Entity_Customer>(
+            // Dictionary For Save Customers and منع التكرار اثناء القراءة 
+            var customerDictionary = new Dictionary<int, Entity_Customer>();
+
+            var customers = await connection.QueryAsync<Entity_Customer, Entity_CustomerPhones, Entity_Customer>(
                 "sp_GetCustomers",
+                (customer, phone) =>
+                {
+                    if (!customerDictionary.TryGetValue(customer.CustomerId, out var currentCustomer))
+                    {
+                        currentCustomer = customer;
+                        currentCustomer.CustomerPhones = new List<Entity_CustomerPhones>();
+                        customerDictionary.Add(currentCustomer.CustomerId, currentCustomer);
+                    }
+
+                    if (phone != null)
+                    {
+                        currentCustomer.CustomerPhones.Add(phone);
+                    }
+
+                    return currentCustomer;
+                },
+                splitOn: "PhoneId", // يخبر Dapper أين ينتهي العميل ويبدأ الهاتف
                 commandType: CommandType.StoredProcedure);
 
-            return customers;
+            return customerDictionary.Values;
         }
 
         /// <summary>
@@ -92,6 +113,70 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         }
 
         /// <summary>
+        ///  Add With Phones Async
+        /// </summary>
+        /// <param name="customer"></param>
+        /// <returns></returns>
+        public async Task<int> AddWithPhonesAsync(Entity_Customer customer)
+        {
+            // Cast لـ DbConnection لأن IDbConnection ما عنده OpenAsync
+            using var connection = (DbConnection)_connectionFactory.CreateConnection();
+            await connection.OpenAsync();
+
+            using var transaction = await connection.BeginTransactionAsync();
+
+            try
+            {
+                // Add Customer and Fetch ID 
+                var customerId = await connection.ExecuteScalarAsync<int>(
+                    "sp_AddCustomerBasic",
+                    new
+                    {
+                        customer.CustomerName,
+                        customer.Email,
+                        customer.Address
+                    },
+                    transaction: transaction,
+                    commandType: CommandType.StoredProcedure);
+
+                // Add Phones 
+                if (customer.CustomerPhones != null && customer.CustomerPhones.Any())
+                {
+                    const string sql = @"INSERT INTO CustomerPhones
+                                         (CustomerId,PhoneNumber,PhoneType,IsPrimary)
+                                         VALUES (@CustomerId,@PhoneNumber,@PhoneType,@IsPrimary)";
+
+                    // نحول لـ List مرة وحدة بدل ما نحسب First() في كل iteration
+                    var phones = customer.CustomerPhones.ToList();
+
+                    for (int index = 0; index < phones.Count; index++)
+                    {
+                        await connection.ExecuteAsync(sql, new
+                        {
+                            CustomerId = customerId,
+                            phones[index].PhoneNumber,
+                            phones[index].PhoneType,
+                            IsPrimary = index == 0 // First Number Is Primary
+                        },
+                        transaction: transaction);
+                    }
+                }
+
+                // Commit 
+                await transaction.CommitAsync();
+                return customerId;
+            }
+            catch
+            {
+                // تحقق قبل الـ Rollback لأن الـ connection ممكن يكون انقطع
+                if (connection.State == ConnectionState.Open)
+                    await transaction.RollbackAsync();
+
+                throw;
+            }
+        }
+
+        /// <summary>
         ///  Update Customer
         ///  methods customer data only - phones
         /// </summary>
@@ -126,6 +211,19 @@ namespace OrderManagementSystem.Infrastructure.Repositories
             await connection.ExecuteAsync(
                 "sp_DeleteCustomer",
                 new { CustomerId = customerId },
+                commandType: CommandType.StoredProcedure);
+        }
+
+        /// <summary>
+        /// Delete All Customers  
+        /// </summary>
+        /// <returns></returns>
+        public async Task DeleteAllAsync()
+        {
+            using var connection = _connectionFactory.CreateConnection();
+
+            await connection.ExecuteAsync(
+                "sp_DeleteAllCustomers",
                 commandType: CommandType.StoredProcedure);
         }
 

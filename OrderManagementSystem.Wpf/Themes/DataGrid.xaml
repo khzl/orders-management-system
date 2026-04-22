@@ -4,54 +4,103 @@
     <!-- DataGrid Styles -->
     <!-- ModernDataGridStyle -->
     <Style x:Key="ModernDataGridStyle" TargetType="DataGrid">
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="RowBackground" Value="White"/>
+        <Setter Property="Background"           Value="White"/>
+        <Setter Property="BorderThickness"      Value="1"/>
+        <Setter Property="BorderBrush"          Value="#F1F5F9"/>
+        <Setter Property="RowBackground"        Value="White"/>
         <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
-        <Setter Property="GridLinesVisibility" Value="None"/>
-        <Setter Property="AutoGenerateColumns" Value="False"/>
-        <Setter Property="CanUserAddRows" Value="False"/>
-        <Setter Property="SelectionMode" Value="Single"/>
-        <Setter Property="SelectionUnit" Value="FullRow"/>
-        <Setter Property="RowHeight" Value="45"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="ColumnHeaderHeight" Value="40"/>
+        <Setter Property="GridLinesVisibility"  Value="None"/>
+        <Setter Property="AutoGenerateColumns"  Value="False"/>
+        <Setter Property="CanUserAddRows"       Value="False"/>
+        <Setter Property="CanUserResizeRows"    Value="False"/>
+        <Setter Property="SelectionMode"        Value="Single"/>
+        <Setter Property="FontSize"             Value="13"/>
+        <Setter Property="ColumnHeaderHeight"   Value="45"/>
+        <Setter Property="RowHeight"            Value="55"/>
+        <Setter Property="HeadersVisibility"    Value="Column"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="VerticalScrollBarVisibility"   Value="Auto"/>
+        <Style.Resources>
+            <Style TargetType="ScrollBar" BasedOn="{StaticResource ModernScrollBar}"/>
+        </Style.Resources>
     </Style>
 
-    <!-- DataGridColumnHeader Style -->
-    <Style TargetType="DataGridColumnHeader">
-        <Setter Property="Background" Value="#F1F5F9"/>
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="10,0"/>
-        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+    <!-- Data Grid Cell Styles -->
+    <Style TargetType="DataGridCell">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="DataGridColumnHeader">
+                <ControlTemplate TargetType="DataGridCell">
                     <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
+                            BorderThickness="0"
+                            Padding="0">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-    
-    <!-- DataGridRow Style -->
-    <Style TargetType="DataGridRow">
-        <Setter Property="BorderThickness" Value="0"/>
         <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#E2E8F0"/>
-            </Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="#DBEAFE"/>
-                <Setter Property="Foreground" Value="{StaticResource PrimaryDarkBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#1D4ED8"/>
+            </Trigger>
+            <Trigger Property="IsFocused" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
             </Trigger>
         </Style.Triggers>
     </Style>
+    
+    <!-- DataGridColumnHeader Style -->
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="#F1F5F9"/>
+        <Setter Property="Foreground" Value="#475569"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="15,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="#E2E8F0" 
+                            BorderThickness="0,0,0,2">
+                        <ContentPresenter 
+                            VerticalAlignment="Center" 
+                            Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- DataGridRow Style -->
+    <Style TargetType="DataGridRow">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Margin"          Value="0"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridRow">
+                    <Border x:Name="RowBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="#F1F5F9"
+                            BorderThickness="0,0,0,1">
+                        <SelectiveScrollingGrid>
+                            <DataGridCellsPresenter/>
+                        </SelectiveScrollingGrid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#F0F7FF"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#EFF6FF"/>
+                            <Setter TargetName="RowBorder" Property="BorderBrush" Value="#BFDBFE"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
     
 </ResourceDictionary>

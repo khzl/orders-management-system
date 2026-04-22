@@ -8,6 +8,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace OrderManagementSystem.Wpf.Views.Customers
@@ -15,7 +16,7 @@ namespace OrderManagementSystem.Wpf.Views.Customers
     /// <summary>
     /// Interaction logic for AddCustomerView.xaml
     /// </summary>
-    public partial class AddCustomerView : Window
+    public partial class AddCustomerView : UserControl
     {
         public AddCustomerView()
         {

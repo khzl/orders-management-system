@@ -35,28 +35,35 @@
                            VerticalAlignment="Center"/>
             </StackPanel>
 
-            <StackPanel Grid.Row="1" Margin="10,0">
-                <RadioButton Content="Dashboard"
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden"
+                          CanContentScroll="True">
+                <StackPanel Margin="10,0">
+                    <RadioButton Content="Dashboard"
                              IsChecked="True"
+                             Command="{Binding DashboardCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
                              Style="{StaticResource SidebarMenuStyle}"
                              GroupName="Menu"/>
-                <RadioButton Content="Customers"
+                    <RadioButton Content="Customers"
+                             Command="{Binding CustomersCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
                              Style="{StaticResource SidebarMenuStyle}"
                              GroupName="Menu"/>
-                <RadioButton Content="Orders"
+                    <RadioButton Content="Orders"
+                             Command="{Binding OrdersCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
                              Style="{StaticResource SidebarMenuStyle}"
                              GroupName="Menu"/>
-                <RadioButton Content="Products"
+                    <RadioButton Content="Products"
+                             Command="{Binding ProductsCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
                              Style="{StaticResource SidebarMenuStyle}"
                              GroupName="Menu"/>
-            </StackPanel>
-
+                </StackPanel>
+            </ScrollViewer>
+            
             <StackPanel Grid.Row="2" Margin="10,20">
                 <RadioButton Content="Settings"
                              Style="{StaticResource SidebarMenuStyle}"/>
                 <Separator Background="{StaticResource BorderBrush}" Margin="10,15"/>
                 <Button Style="{StaticResource OutlineButtonStyle}" Content="Logout"
-                        Margin="5"/>
+                        Margin="20"/>
             </StackPanel>
         </Grid>
     </Border>

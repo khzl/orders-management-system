@@ -30,6 +30,7 @@ namespace OrderManagementSystem.Wpf.Commands
         // Execute
         public void Execute(object? parameter) => _execute(parameter);
 
+
         // استدعيها يدويا لاجبار ال UI على اعادة التحقق 
         public void RaiseCanExecuteChanged() => CommandManager.InvalidateRequerySuggested();
     }

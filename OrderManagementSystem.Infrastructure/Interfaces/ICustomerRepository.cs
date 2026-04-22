@@ -14,8 +14,10 @@ namespace OrderManagementSystem.Infrastructure.Interfaces
         public Task<IEnumerable<Entity_Customer>> GetAllAsync();
         public Task<Entity_Customer?> GetByIdAsync(int customerId);
         public Task<int> AddAsync(Entity_Customer customer, string phone, string phoneType = "Mobile");
+        public Task<int> AddWithPhonesAsync(Entity_Customer customer);
         public Task UpdateAsync(Entity_Customer customer);
         public Task DeleteAsync(int customerId);
+        public Task DeleteAllAsync();
 
         // Phone Management 
         public Task AddPhoneAsync(int customerId, string phone, string phoneType = "Mobile", bool isPrimary = false);

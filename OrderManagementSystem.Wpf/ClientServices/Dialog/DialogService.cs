@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OrderManagementSystem.Wpf.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -7,16 +9,41 @@ namespace OrderManagementSystem.Wpf.ClientService.Dialog
 {
     public class DialogService : IDialogService
     {
+        // private field
+        private readonly MainViewModel _mainViewModel;
 
-        public void ShowMessage(string message, string title = "Info")
+        // public Constructor (Constructor Injection)
+        public DialogService(MainViewModel mainViewModel)
         {
-            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+            _mainViewModel = mainViewModel; // Injection
         }
 
-        public bool ShowConfirmation(string message, string title = "Confirm")
+        public async Task ShowMessage(string message, string title = "Info")
         {
-            var result = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            return result == MessageBoxResult.Yes;
+            var dialogViewModel = new DialogViewModel(title, message, false);
+
+            _mainViewModel.CurrentDialog = dialogViewModel;
+            _mainViewModel.IsDialogVisible = true;
+
+            await dialogViewModel.DialogTask; // Wait User Enter OK
+
+            _mainViewModel.IsDialogVisible = false;
+            _mainViewModel.CurrentDialog = null;
+        }
+
+        public async Task<bool> ShowConfirmation(string message, string title = "Confirm")
+        {
+            var dialogViewModel = new DialogViewModel(title, message);
+
+            _mainViewModel.CurrentDialog = dialogViewModel;
+            _mainViewModel.IsDialogVisible = true;
+
+            var result = await dialogViewModel.DialogTask;
+
+            _mainViewModel.IsDialogVisible = false;
+            _mainViewModel.CurrentDialog = null;
+
+            return result; // return true or false 
         }
 
     }

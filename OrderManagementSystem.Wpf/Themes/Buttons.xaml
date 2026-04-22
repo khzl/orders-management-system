@@ -46,6 +46,11 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- Primary Button Style Inheritance From Base Button Style -->
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/> <!-- Dynamic -->
+    </Style>
     
     <!-- Success Button Style Inheritance From Base Button Styles -->
     <Style x:Key="SuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">

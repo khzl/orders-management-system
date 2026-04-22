@@ -23,29 +23,64 @@ namespace OrderManagementSystem.Wpf.Components
             InitializeComponent();
         }
 
-        // Dependency Property for Title
+        // --- Title & Value ---
         public string Title
         {
-            get { return (string)GetValue(TitleProperty); }
-            set { SetValue(TitleProperty, value); }
+            get => (string)GetValue(TitleProperty);
+            set => SetValue(TitleProperty, value);
         }
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register("Title", typeof(string), typeof(CardComponent), new PropertyMetadata("", (d, e) => {
-                ((CardComponent)d).txtTitle.Text = e.NewValue.ToString();
-            }));
+            DependencyProperty.Register(nameof(Title), typeof(string), 
+                typeof(CardComponent), new PropertyMetadata("Title"));
 
-
-        // Dependency Property for Value
         public string Value
         {
-            get { return (string)GetValue(ValueProperty); }
-            set { SetValue(ValueProperty, value); }
+            get => (string)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
         }
         public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register("Value", typeof(string), typeof(CardComponent), new PropertyMetadata("", (d, e) => {
-                ((CardComponent)d).txtValue.Text = e.NewValue.ToString();
-            }));
+            DependencyProperty.Register(nameof(Value),
+                typeof(string), typeof(CardComponent), new PropertyMetadata("0"));
 
+        // --- Icon Property ---
+        public string Icon
+        {
+            get => (string)GetValue(IconProperty);
+            set => SetValue(IconProperty, value);
+        }
+        public static readonly DependencyProperty IconProperty =
+            DependencyProperty.Register(nameof(Icon), 
+                typeof(string), typeof(CardComponent), new PropertyMetadata("📊"));
+
+        // --- Trend (Percentage) ---
+        public string Trend
+        {
+            get => (string)GetValue(TrendProperty);
+            set => SetValue(TrendProperty, value);
+        }
+        public static readonly DependencyProperty TrendProperty =
+            DependencyProperty.Register(nameof(Trend),
+                typeof(string), typeof(CardComponent), new PropertyMetadata("0%"));
+
+        // --- Trend Brush (Color) ---
+        public Brush TrendBrush
+        {
+            get => (Brush)GetValue(TrendBrushProperty);
+            set => SetValue(TrendBrushProperty, value);
+        }
+        public static readonly DependencyProperty TrendBrushProperty =
+            DependencyProperty.Register(nameof(TrendBrush), 
+                typeof(Brush), typeof(CardComponent), new PropertyMetadata(Brushes.Green));
+
+        // --- Description (Since last month) ---
+        public string Description
+        {
+            get => (string)GetValue(DescriptionProperty);
+            set => SetValue(DescriptionProperty, value);
+        }
+        public static readonly DependencyProperty DescriptionProperty =
+            DependencyProperty.Register(nameof(Description),
+                typeof(string), typeof(CardComponent), new PropertyMetadata("vs last month"));
 
     }
 }

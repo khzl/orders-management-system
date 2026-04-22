@@ -21,3 +21,6 @@
 /OrderManagement.slnx
 /OrderManagementSystem.Wpf/OrderManagementSystem.Wpf.csproj.user
 /OrderManagementSystem.Wpf/appsettings.json
+/OrderManagementSystem.Dtos/bin/Debug/net10.0
+/OrderManagementSystem.Dtos/obj
+/OrderManagementSystem.Dtos/OrderManagementSystem.Dtos.csproj

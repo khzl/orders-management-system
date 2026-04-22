@@ -1,4 +1,5 @@
 ﻿using OrderManagementSystem.Domain.Entities;
+using OrderManagementSystem.Dtos.Customers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace OrderManagementSystem.Application.Commons
         // Validations business Role
 
         // Validation Customer 
-        public static Result ValidateCustomer(Entity_Customer customer)
+        public static Result ValidateCustomer(CustomerDto customer)
         {
             if (string.IsNullOrWhiteSpace(customer.CustomerName))
                 return Result.Failure("Name Is Required");

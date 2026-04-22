@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="OrderManagementSystem.Wpf.Components.LoadingOverlayComponent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
+             mc:Ignorable="d">
+    <Grid Background="White" Opacity="0.8">
+        <StackPanel VerticalAlignment="Center"
+                     HorizontalAlignment="Center">
+            <Ellipse Width="50" Height="50" Stroke="#0284C7" StrokeThickness="4"
+                     StrokeDashArray="3,1" RenderTransformOrigin="0.5,0.5">
+                <Ellipse.RenderTransform>
+                    <RotateTransform x:Name="noFreezeRotate" Angle="0"/>
+                </Ellipse.RenderTransform>
+                <Ellipse.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="noFreezeRotate"
+                                                 Storyboard.TargetProperty="Angle"
+                                                 From="0" To="360" Duration="0:0:1"
+                                                 RepeatBehavior="Forever"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Ellipse.Triggers>
+            </Ellipse>
+            <TextBlock Text="Loading......" Margin="0,15,0,0"
+                       FontWeight="SemiBold" Foreground="#475569"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

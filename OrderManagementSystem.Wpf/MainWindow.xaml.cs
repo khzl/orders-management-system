@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using OrderManagementSystem.Wpf.ViewModels;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,9 +17,10 @@ namespace OrderManagementSystem.Wpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(MainViewModel mainViewModel) // Auto Injection
         {
             InitializeComponent();
+            DataContext = mainViewModel; // link MainViewModel in this view using DataContext
         }
     }
 }

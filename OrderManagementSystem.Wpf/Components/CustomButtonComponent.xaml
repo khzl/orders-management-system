@@ -8,21 +8,32 @@
              d:DesignHeight="45" d:DesignWidth="150">
 
     <Button Style="{StaticResource BaseButtonStyle}"
-            x:Name="btnMain"
+            Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType=UserControl}}"
             HorizontalContentAlignment="Stretch">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock x:Name="txtIcon"
-                       Text="+"
+
+            <TextBlock Text="{Binding Icon, RelativeSource={RelativeSource AncestorType=UserControl}}"
                        FontSize="16"
                        Margin="0,0,8,0"
-                       VerticalAlignment="Center"
-                       Visibility="Visible"/>
+                       VerticalAlignment="Center">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="Text" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
 
-            <TextBlock x:Name="txtText"
-                       Text="Add"
+            <TextBlock Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}"
                        VerticalAlignment="Center"/>
+            
         </StackPanel>
-        
     </Button>
-    
 </UserControl>

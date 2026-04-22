@@ -21,10 +21,38 @@
             </StackPanel>
 
             <UniformGrid Columns="4" Margin="0,0,0,30">
-                <components:CardComponent Title="Total Revenue" Value="12,840$" Margin="0,0,15,0"/>
-                <components:CardComponent Title="Active Orders" Value="42" Margin="0,0,15,0"/>
-                <components:CardComponent Title="New Customers" Value="128" Margin="0,0,15,0"/>
-                <components:CardComponent Title="Pending Shipments" Value="7" Margin="0,0,0,0"/>
+                <components:CardComponent 
+                    Title="Total Revenue"
+                    Value="12,840$"
+                    Icon="💲"
+                    Trend="+5.4%"
+                    TrendBrush="Green"
+                    Description="Best Revenue"
+                    Margin="10"/>
+                <components:CardComponent 
+                    Title="Canceled Orders" 
+                    Value="23"
+                    Icon="🚫"
+                    Trend="-2.1%"
+                    TrendBrush="Red"
+                    Description="Improvement"
+                    Margin="10"/>
+                <components:CardComponent 
+                    Title="Active Customers" 
+                    Value="1,456"
+                    Icon="👥"
+                    Trend="+5.4%"
+                    TrendBrush="Green"
+                    Description="Than Yesterday"
+                    Margin="10"/>
+                <components:CardComponent 
+                    Title="Pending Shipments"
+                    Value="7"
+                    Icon="🚨"
+                    Trend="+5.7%"
+                    TrendBrush="Green"
+                    Description="Pending Orders"
+                    Margin="10"/>
             </UniformGrid>
 
             <Border Style="{StaticResource CardStyle}" Padding="0">
@@ -43,11 +71,12 @@
 
                     <DataGrid Style="{StaticResource ModernDataGridStyle}"
                               ItemsSource="{Binding RecentOrders}"
+                              HorizontalAlignment="Stretch"
                               Margin="0"
                               MaxHeight="400">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="100"/>
-                            <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
+                            <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="150"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding OrderDate}" Width="150"/>
                             <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount}" Width="120"/>
 

@@ -1,11 +1,20 @@
 ﻿using OrderManagementSystem.Application.Interfaces;
 using OrderManagementSystem.Domain.Entities;
+using OrderManagementSystem.Dtos.Customers;
 using OrderManagementSystem.Wpf.ClientService.Dialog;
+using OrderManagementSystem.Wpf.ClientService.Navigation;
+using OrderManagementSystem.Wpf.ClientServices.EvenService;
+using OrderManagementSystem.Wpf.Commands;
 using OrderManagementSystem.Wpf.Helper;
+using OrderManagementSystem.Wpf.Helper.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text;
+using System.Windows.Data;
+using System.Windows.Input;
+using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
 
 namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
@@ -13,9 +22,306 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
     {
         // private field
         private readonly ICustomerService _customerService;
+        private readonly INavigationService _navigationService;
         private readonly IDialogService _dialogService;
+        private readonly IEventBus _eventBus;
 
-        // property List Collection For Customer 
-        public ObservableCollection<Entity_Customer>
+        //(Buffer) list to store data original
+        private List<CustomerDto> _allCustomers = new();
+
+        // Handlers نحتفظ بها لاحقا for Unsubscribe 
+        private readonly Action<CustomerCreatedEvent> _onCreated;
+        private readonly Action<CustomerUpdatedEvent> _onUpdated;
+        private readonly Action<CustomerDeletedEvent> _onDeleted;
+        private readonly Action<CustomerDeletedAllEvent> _onDeletedAll;
+
+
+        // property List Collection For Customer list linked for DataGrid
+        public RangeObservableCollection<CustomerDto>? Customers { get; set; } = new();
+
+
+        private CustomerDto? _selectedCustomer;
+
+        public CustomerDto? SelectedCustomer
+        {
+            get => _selectedCustomer;
+            set
+            {
+                _selectedCustomer = value;
+                OnPropertyChanged(nameof(SelectedCustomer));
+            }
+        }
+
+        private string? _errorMessage;
+        public string? ErrorMessage
+        {
+            get => _errorMessage;
+            set
+            {
+                _errorMessage = value;
+                OnPropertyChanged(nameof(ErrorMessage));
+            }
+        }
+
+        // Search Text Property 
+        private string? _searchText;
+        public string? SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged(nameof(SearchText));
+                ApplyFilter();
+            }
+        }
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+
+        // Selected Search Type property 
+        // Property To Store Selected Search Type 
+        private en_CustomerSearchType? _selectedSearchType = en_CustomerSearchType.All;
+        public en_CustomerSearchType? SelectedSearchType
+        {
+            get => _selectedSearchType;
+            set
+            {
+                _selectedSearchType = value;
+                OnPropertyChanged(nameof(SelectedSearchType));
+                ApplyFilter(); // again Filter on Changed Type 
+            }
+        }
+
+        // قائمة الأنواع لعرضها في الـ ComboBox
+        public IEnumerable<en_CustomerSearchType> SearchTypes =>
+            Enum.GetValues(typeof(en_CustomerSearchType)).Cast<en_CustomerSearchType>();
+
+
+        // Command
+        public ICommand? LoadCommand { get; }
+        public ICommand? AddCommand { get; }
+        public ICommand? DeleteCommand { get; } // Delete One (in Row)
+        public ICommand? DeleteAllCommand { get; } // Delete All (in Top Button)
+        public ICommand? EditCommand { get; }
+
+
+        // Constructor 
+        public CustomersViewModel(
+            ICustomerService customerService, 
+            INavigationService navigationService,
+            IDialogService dialogService,
+            IEventBus eventBus)
+        {
+            // Injections
+            _customerService = customerService;
+            _navigationService = navigationService;
+            _dialogService = dialogService;
+            _eventBus = eventBus;
+
+            // ─────────────────────────────────────────
+            // Subscribe — كل Event يعمل Reload تلقائي
+            // ─────────────────────────────────────────
+            _onCreated = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
+            _onUpdated = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
+            _onDeleted = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
+            _onDeletedAll = _ => App.Current.Dispatcher.Invoke(() =>
+            {
+                _allCustomers.Clear();
+                ApplyFilter();
+            });
+
+            _eventBus.Subscribe(_onCreated);
+            _eventBus.Subscribe(_onUpdated);
+            _eventBus.Subscribe(_onDeleted);
+            _eventBus.Subscribe(_onDeletedAll);
+
+            // Commands 
+            LoadCommand = new AsyncRelayCommand(async _ => await LoadData());
+            AddCommand = new AsyncRelayCommand(async _ => await GoToAddCustomer());
+
+            DeleteCommand = new AsyncRelayCommand(async obj =>
+            {
+                if (obj is CustomerDto customerDto)
+                {
+                    await DeleteCustomer(customerDto);
+                }
+            });
+
+            DeleteAllCommand = new AsyncRelayCommand(async _ => await DeleteAllCustomers());
+
+            EditCommand = new AsyncRelayCommand(async obj =>
+            {
+                if (obj is UpdateCustomerDto updateCustomerDto)
+                    await GoToUpdateCustomer(updateCustomerDto);
+            });
+
+        }
+
+
+        // LoadData
+        private async Task LoadData()
+        {
+            try
+            {
+                IsLoading = true;
+                var result = await _customerService.GetAllAsync();
+
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    if (result.IsSuccess)
+                    {
+                        _allCustomers = result.Data?.ToList() ?? new();
+                        ApplyFilter();
+                    }
+                    else
+                    {
+                        ErrorMessage = result.Error;
+                    }
+                    IsLoading = false;
+                });
+            }
+            catch (Exception ex)
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    ErrorMessage = $"Error: {ex.Message}";
+                    IsLoading = false;
+                });
+            }
+        }
+
+        // Logic Filters professional
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                // if search empty, show all data
+                Customers?.ReplaceRange(_allCustomers);
+                return;
+            }
+
+            // keep the original search text and use a StringComparison for comparisons
+            string query = SearchText ?? string.Empty;
+
+            var filtered = _allCustomers.Where(c =>
+            {
+                return SelectedSearchType switch
+                {
+                    en_CustomerSearchType.Name => 
+                    c.CustomerName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
+                    en_CustomerSearchType.Email => 
+                    c.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
+
+                    // search safely inside list Phones
+                    en_CustomerSearchType.Phone =>
+                        c.Phones?.Any(p => p.PhoneNumber?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) 
+                        ?? false,
+
+                    // Default for Search All
+                    _ => (c.CustomerName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                         (c.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                         (c.Phones?.Any(p => p.PhoneNumber?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) 
+                         ?? false)
+                };
+            }).ToList();
+
+            Customers?.ReplaceRange(filtered);
+        }
+
+
+        // Navigation To Add CustomerView
+        private Task GoToAddCustomer()
+        {
+            _navigationService.NavigateTo<AddCustomerViewModel>();
+            return Task.CompletedTask;
+        }
+
+        // Navigation To Update CustomerView 
+        private Task GoToUpdateCustomer(UpdateCustomerDto updateCustomerDto)
+        {
+            if (updateCustomerDto == null)
+                return Task.CompletedTask;
+
+            _navigationService.NavigateTo<UpdateCustomerViewModel>(updateCustomerDto);
+            return Task.CompletedTask;
+        }
+
+        // Delete One Customer By Id
+        // when delete will be must delete from two list 
+        private async Task DeleteCustomer(CustomerDto customerDto)
+        {
+            // here add Dialog Show Confirm Dialog
+            var isConfirmed = await _dialogService.ShowConfirmation($"Delete {customerDto.CustomerName}?",
+                "This action cannot be undone. Are you sure you want to proceed?");
+
+            if (!isConfirmed)
+                return;
+
+            try
+            {
+                IsLoading = true;
+                var result = await _customerService.DeleteAsync(customerDto.CustomerId);
+
+                if (result.IsSuccess)
+                    // EventBus يتولى الـ Reload — ما نحتاج نستدعي LoadData يدوياً
+                    _eventBus.Publish(new CustomerDeletedEvent(customerDto.CustomerId));
+                else
+                    ErrorMessage = result.Error;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // Delete All Customers
+        private async Task DeleteAllCustomers()
+        {
+            if (!_allCustomers.Any())
+                return;
+
+            var isConfirmed = await _dialogService.ShowConfirmation(
+                "CRITICAL: Delete All Customers",
+                $"Warning: You are about to wipe all {_allCustomers.Count} records. Are you absolutely sure?");
+
+            if (!isConfirmed)
+                return;
+
+            try
+            {
+                IsLoading = true;
+                var result = await _customerService.DeleteAllAsync();
+
+                if (result.IsSuccess)
+                    _eventBus.Publish(new CustomerDeletedAllEvent());
+                else
+                    ErrorMessage = result.Error;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // CLEANUP — Unsubscribe عند إغلاق الـ ViewModel
+        // ─────────────────────────────────────────
+        public void Dispose()
+        {
+            _eventBus.Unsubscribe(_onCreated);
+            _eventBus.Unsubscribe(_onUpdated);
+            _eventBus.Unsubscribe(_onDeleted);
+            _eventBus.Unsubscribe(_onDeletedAll);
+        }
     }
 }

@@ -18,9 +18,42 @@ namespace OrderManagementSystem.Wpf.Components
     /// </summary>
     public partial class SidebarComponent : UserControl
     {
-        public SidebarComponent()
+        // Add Dependency Properties
+
+        public static readonly DependencyProperty DashboardCommandProperty =
+        DependencyProperty.Register(nameof(DashboardCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        public static readonly DependencyProperty CustomersCommandProperty =
+            DependencyProperty.Register(nameof(CustomersCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        public static readonly DependencyProperty OrdersCommandProperty =
+            DependencyProperty.Register(nameof(OrdersCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        public static readonly DependencyProperty ProductsCommandProperty =
+            DependencyProperty.Register(nameof(ProductsCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        public ICommand DashboardCommand
         {
-            InitializeComponent();
+            get => (ICommand)GetValue(DashboardCommandProperty);
+            set => SetValue(DashboardCommandProperty, value);
         }
+        public ICommand CustomersCommand
+        {
+            get => (ICommand)GetValue(CustomersCommandProperty);
+            set => SetValue(CustomersCommandProperty, value);
+        }
+        public ICommand OrdersCommand
+        {
+            get => (ICommand)GetValue(OrdersCommandProperty);
+            set => SetValue(OrdersCommandProperty, value);
+        }
+        public ICommand ProductsCommand
+        {
+            get => (ICommand)GetValue(ProductsCommandProperty);
+            set => SetValue(ProductsCommandProperty, value);
+        }
+
+        public SidebarComponent() => InitializeComponent();
+        
     }
 }
