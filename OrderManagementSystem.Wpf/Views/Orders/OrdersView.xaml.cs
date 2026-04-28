@@ -1,5 +1,4 @@
-﻿using OrderManagementSystem.Wpf.ViewModels.Customers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -11,16 +10,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using OrderManagementSystem.Wpf.Commands;
 
-namespace OrderManagementSystem.Wpf.Views.Customers
+namespace OrderManagementSystem.Wpf.Views.Orders
 {
     /// <summary>
-    /// Interaction logic for CustomersView.xaml
+    /// Interaction logic for OrdersView.xaml
     /// </summary>
-    public partial class CustomersView : UserControl
+    public partial class OrdersView : UserControl
     {
-        public CustomersView()
+        public OrdersView()
         {
             InitializeComponent();
         }

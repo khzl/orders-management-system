@@ -6,6 +6,7 @@ namespace OrderManagementSystem.Dtos.Customers
 {
     public class CustomerPhoneDto
     {
+        public int PhoneId { get; set; }
         public int CustomerId { get; set; }
         public string? PhoneNumber { get; set; }
         public string? PhoneType { get; set; }

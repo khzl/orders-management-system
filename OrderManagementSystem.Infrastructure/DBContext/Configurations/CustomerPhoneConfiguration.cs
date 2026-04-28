@@ -38,7 +38,7 @@ namespace OrderManagementSystem.Infrastructure.DBContext.Configurations
             })
                 .IsUnique()
                 .HasFilter("[IsPrimary] = 1")
-                .HasDatabaseName("UQ_CustomerPhones_PrimaryPerCustomer");
+                .HasDatabaseName("UQ_CustomerPhones_OnePrimary");
         }
 
     }

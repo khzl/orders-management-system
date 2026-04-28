@@ -8,20 +8,23 @@
              xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1000"
-             Background="{StaticResource BackgroundBrush}"
-             Loaded="CustomersView_Loaded">
+             Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
     </UserControl.Resources>
-    
+
     <Grid Margin="20">
-        
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Auto Size -->
-            <RowDefinition Height="Auto"/> <!-- Auto Size -->
-            <RowDefinition Height="*"/> <!-- Star Size -->
+            <RowDefinition Height="Auto"/>
+            <!-- Auto Size -->
+            <RowDefinition Height="Auto"/>
+            <!-- Auto Size -->
+            <RowDefinition Height="*"/>
+            <!-- Star Size -->
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,30">
@@ -48,10 +51,12 @@
         <Grid Grid.Row="1" Margin="0,0,0,15">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/> <!-- Star Size -->
-                <ColumnDefinition Width="Auto"/> <!-- Auto Size -->
+                <ColumnDefinition Width="*"/>
+                <!-- Star Size -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Auto Size -->
             </Grid.ColumnDefinitions>
-            
+
             <StackPanel Orientation="Horizontal">
                 <Button Content="+ Add New Customer"
                         Command="{Binding AddCommand}"
@@ -94,170 +99,257 @@
                                Margin="0,0,12,0" IsHitTestVisible="False" Foreground="{StaticResource TextSecondaryBrush}"/>
                 </Grid>
             </StackPanel>
-            
+
         </Grid>
 
+        <Grid Grid.Row="2">
 
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0" VerticalAlignment="Top">
-            <Grid>
-                <DataGrid ItemsSource="{Binding Customers}"
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <!-- For Data Grid -->
+                <RowDefinition Height="Auto"/>
+                <!-- For Pagination -->
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="0" VerticalAlignment="Top">
+                <Grid>
+                    <DataGrid ItemsSource="{Binding Customers}"
                       SelectedItem="{Binding SelectedCustomer}"
                       Style="{StaticResource ModernDataGridStyle}"
                       HorizontalAlignment="Stretch"
                       AutoGenerateColumns="False"
-                      BorderThickness="0"
                       HeadersVisibility="Column"
                       RowHeight="65"
                       GridLinesVisibility="None"
                       SelectionMode="Single"
                       CanUserAddRows="False"
-                      RowDetailsVisibilityMode="VisibleWhenSelected">
+                      RowDetailsVisibilityMode="Collapsed"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      ScrollViewer.CanContentScroll="True"
+                      ColumnWidth="Auto">
 
-                    <DataGrid.RowDetailsTemplate>
-                        <DataTemplate>
-                            <Border Background="#F1F5F9" 
-                                    Padding="20" BorderThickness="0,1" 
-                                    BorderBrush="{StaticResource BorderBrush}">
-                                <StackPanel>
-                                    <TextBlock Text="All Contact Numbers" 
-                                               FontWeight="Bold" 
-                                               Margin="0,0,0,10" 
-                                               Foreground="#475569"/>
-                                    <ItemsControl ItemsSource="{Binding CustomerPhones}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                                    <Border Background="#E2E8F0" 
-                                                            Padding="8,4" CornerRadius="4">
-                                                        <TextBlock Text="{Binding PhoneType}" 
-                                                                   FontSize="10" FontWeight="Bold"/>
-                                                    </Border>
-                                                    <TextBlock Text="{Binding PhoneNumber}" 
-                                                               Margin="10,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="(Primary)" Foreground="#0284C7" FontSize="11" 
-                                                               Visibility="{Binding IsPrimary, 
-                                                        Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </DataGrid.RowDetailsTemplate>
-                    
-                    <DataGrid.Columns>
-                        <!-- Customer Info -> CustomerName + Email Column -->
-                        <DataGridTemplateColumn Header="Customer Info"
-                                            Width="2*" MinWidth="200">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center" Margin="10,0">
-                                        <TextBlock Text="{Binding CustomerName}"
+                        <!-- Here DataGrid Columns Here All Columns In DataGrid -->
+                        <DataGrid.Columns>
+
+                            <!-- Customer Info -> CustomerName + Email Column -->
+                            <DataGridTemplateColumn Header="Customer Info"
+                                            Width="2*" MinWidth="250">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Margin="10,0">
+                                            <TextBlock Text="{Binding CustomerName}"
                                                FontWeight="Bold"
                                                FontSize="14"
                                                Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding Email}"
+                                            <TextBlock Text="{Binding Email}"
                                                FontSize="11"
                                                Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <!-- Phone Contact -> PhoneNumber Column  -->
-                        <DataGridTemplateColumn Header="Phone Contact" Width="1.5*" MinWidth="200">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <ItemsControl ItemsSource="{Binding CustomerPhones}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="0,2,8,2">
-                                                    <TextBlock Text="📞" FontSize="12"
+                            <!-- Phone Contact -> PhoneNumber Column  -->
+                            <DataGridTemplateColumn Header="Phone Contact" Width="1.5*" MinWidth="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding Phones}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,8,2">
+                                                        <TextBlock Text="📞" FontSize="12"
                                                                Margin="0,0,4,0" 
                                                                VerticalAlignment="Center"/>
-                                                    <TextBlock 
+                                                        <TextBlock 
                                                         Text="{Binding PhoneNumber}" 
                                                         VerticalAlignment="Center" 
                                                         Style="{StaticResource TextMuted}"/>
-                                                    <TextBlock 
+                                                        <TextBlock 
                                                         Text=" •" 
                                                         VerticalAlignment="Center" 
                                                         Foreground="#CBD5E1"
                                                         Margin="4,0,0,0"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <!-- Location Address -> Address Column  -->
-                        <DataGridTemplateColumn Header="Location Address"
+
+                            <!-- Location Address -> Address Column  -->
+                            <DataGridTemplateColumn Header="Location Address"
                                             Width="1.5*" MinWidth="200">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Address}"
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Address}"
                                            VerticalAlignment="Center"
                                            Margin="10,0"
                                            TextWrapping="Wrap"
                                            Foreground="{StaticResource TextPrimaryBrush}"
                                            Style="{StaticResource TextBody}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <!-- Actions Column For Delete And Update Customers -->
-                        <DataGridTemplateColumn Header="Actions" Width="1.5*" MinWidth="200">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <!-- Edit -->
-                                        <Button Command="{Binding DataContext.EditCommand,
+                            <!-- Actions Column For Delete And Update Customers -->
+                            <DataGridTemplateColumn Header="Actions" Width="1.5*" MinWidth="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- Edit -->
+                                            <Button Command="{Binding DataContext.EditCommand,
                                                 RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource OutlineButtonStyle}"
                                                 Padding="8,2" Margin="0,0,5,0">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="✏️" FontSize="14" Margin="0,0,6,0"/>
-                                                <TextBlock Text="Edit" />
-                                            </StackPanel>
-                                        </Button>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="✏️" FontSize="14" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="Edit" />
+                                                </StackPanel>
+                                            </Button>
 
-                                        <!-- Delete Current Row Only -->
-                                        <Button 
+                                            <!-- Delete Current Row Only -->
+                                            <Button 
                                             Command="{Binding DataContext.DeleteCommand,
                                             RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource DangerButtonStyle}"
                                             Padding="8,2">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="🗑️" FontSize="14" Margin="0,0,6,0"/>
-                                                <TextBlock Text="Delete" />
-                                            </StackPanel>
-                                        </Button>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="🗑️" FontSize="14" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="Delete" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Add Column Toggle Professional -->
+                            <DataGridTemplateColumn Header="Row Details" 
+                                                Width="2*" MinWidth="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton x:Name="ExpanderBtn" 
+                                                  Content="➡" 
+                                                  FontSize="20"
+                                                  FontWeight="Bold"
+                                                  Width="30"
+                                                  Height="30"
+                                                  IsChecked="{Binding IsDetailsExpanded, 
+                                                  RelativeSource={RelativeSource AncestorType=DataGridRow}, 
+                                                  Converter={StaticResource BoolToVisibilityConverter},
+                                                  Mode=TwoWay}"
+                                                  Style="{StaticResource GhostToggleButtonStyle}">
+                                            <ToggleButton.RenderTransform>
+                                                <RotateTransform Angle="0" CenterX="15" CenterY="15"/>
+                                            </ToggleButton.RenderTransform>
+                                        </ToggleButton>
+                                        <DataTemplate.Triggers>
+                                            <Trigger SourceName="ExpanderBtn" Property="IsChecked" Value="True">
+                                                <Setter TargetName="ExpanderBtn" Property="Content" Value="‹"/>
+                                                <Setter TargetName="ExpanderBtn" Property="Foreground" 
+                                                    Value="{StaticResource PrimaryBrush}"/>
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="ExpanderBtn" 
+                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                               To="90" 
+                                               Duration="0:0:0.2"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="ExpanderBtn" 
+                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                 To="0" Duration="0:0:0.2"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+
+                        <!-- Here Row Details Template in Data Grid -->
+                        <DataGrid.RowDetailsTemplate>
+                            <DataTemplate>
+                                <Border Background="#F1F5F9" 
+                                    Padding="20" BorderThickness="0,1" 
+                                    BorderBrush="{StaticResource BorderBrush}">
+                                    <StackPanel>
+                                        <TextBlock Text="All Contact Numbers" 
+                                               FontWeight="Bold" 
+                                               Margin="0,0,0,10" 
+                                               Foreground="#475569"/>
+                                        <ItemsControl 
+                                        ItemsSource="{Binding Phones}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" 
+                                                            Margin="0,0,0,5">
+                                                        <Border Background="#E2E8F0" 
+                                                            Padding="8,4" 
+                                                            CornerRadius="4">
+                                                            <TextBlock Text="{Binding PhoneType}" 
+                                                                   FontSize="10" 
+                                                                   FontWeight="Bold"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding PhoneNumber}" 
+                                                               Margin="10,0" 
+                                                               VerticalAlignment="Center"/>
+                                                        <TextBlock Text="(Primary)" 
+                                                               Foreground="#0284C7"
+                                                               FontSize="11" 
+                                                               Visibility="{Binding IsPrimary, 
+                                                               Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </StackPanel>
-                                    
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        
-                    </DataGrid.Columns>
-                </DataGrid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGrid.RowDetailsTemplate>
 
-                <components:LoadingOverlayComponent Visibility="{Binding IsLoading,
+                    </DataGrid>
+
+                    <!--<StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Visibility="{Binding Customers.Count,
+                                         Converter={StaticResource ZeroToVisibilityConverter}}">
+                    <TextBlock Text="No Customers Found"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>-->
+
+                    <components:LoadingOverlayComponent Visibility="{Binding IsLoading,
                                                      Converter={StaticResource BoolToVisibilityConverter}}"/>
-            </Grid>
-            
-        </Border>
-
+                </Grid>
+            </Border>
+            <Border Grid.Row="1" Background="{StaticResource BorderBrush}">
+                <components:PaginationComponent Grid.Row="1"
+                                            CurrentPage="{Binding CurrentPage}"
+                                            TotalPages="{Binding TotalPages}"
+                                            NextCommand="{Binding NextPageCommand}"
+                                            PrevCommand="{Binding PrevPageCommand}"
+                                            Margin="0,10,0,0"/>
+            </Border>
+        </Grid>
     </Grid>
-    
 </UserControl>

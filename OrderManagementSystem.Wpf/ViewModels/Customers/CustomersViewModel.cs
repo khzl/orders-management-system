@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
@@ -37,7 +38,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
 
         // property List Collection For Customer list linked for DataGrid
-        public RangeObservableCollection<CustomerDto>? Customers { get; set; } = new();
+        public RangeObservableCollection<CustomerDto> Customers { get; set; } = new();
 
 
         private CustomerDto? _selectedCustomer;
@@ -87,6 +88,16 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
+        private bool _isDetailsExpanded;
+        public bool IsDetailsExpanded
+        {
+            get => _isDetailsExpanded;
+            set
+            {
+                _isDetailsExpanded = value;
+                OnPropertyChanged(nameof(IsDetailsExpanded));
+            }
+        }
 
         // Selected Search Type property 
         // Property To Store Selected Search Type 
@@ -131,9 +142,9 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             // ─────────────────────────────────────────
             // Subscribe — كل Event يعمل Reload تلقائي
             // ─────────────────────────────────────────
-            _onCreated = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
-            _onUpdated = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
-            _onDeleted = _ => App.Current.Dispatcher.InvokeAsync(() => LoadData());
+            _onCreated = async _ => await LoadData();
+            _onUpdated = async _ => await LoadData();
+            _onDeleted = async _ => await LoadData();
             _onDeletedAll = _ => App.Current.Dispatcher.Invoke(() =>
             {
                 _allCustomers.Clear();
@@ -161,8 +172,25 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
             EditCommand = new AsyncRelayCommand(async obj =>
             {
-                if (obj is UpdateCustomerDto updateCustomerDto)
+                if (obj is CustomerDto customerDto)
+                {
+                    var updateCustomerDto = new UpdateCustomerDto
+                    {
+                        CustomerId = customerDto.CustomerId,
+                        CustomerName = customerDto.CustomerName,
+                        Email = customerDto.Email,
+                        Address = customerDto.Address,
+                        CustomerPhones = customerDto.Phones.Select(p => new CustomerPhoneDto
+                        {
+                            PhoneId = p.PhoneId,
+                            CustomerId = p.CustomerId,
+                            PhoneNumber = p.PhoneNumber,
+                            PhoneType = p.PhoneType,
+                            IsPrimary = p.IsPrimary
+                        }).ToList()
+                    };
                     await GoToUpdateCustomer(updateCustomerDto);
+                }
             });
 
         }
@@ -171,47 +199,50 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         // LoadData
         private async Task LoadData()
         {
+            ErrorMessage = null;
+
             try
             {
                 IsLoading = true;
                 var result = await _customerService.GetAllAsync();
 
-                App.Current.Dispatcher.Invoke(() =>
+                if (result.IsSuccess)
                 {
-                    if (result.IsSuccess)
-                    {
-                        _allCustomers = result.Data?.ToList() ?? new();
-                        ApplyFilter();
-                    }
-                    else
-                    {
-                        ErrorMessage = result.Error;
-                    }
-                    IsLoading = false;
-                });
+                    _allCustomers = result.Data?.ToList() ?? new();
+                    ApplyFilter();
+                }
+                else
+                {
+                    ErrorMessage = result.Error;
+                }
+                IsLoading = false;
+
             }
             catch (Exception ex)
             {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    ErrorMessage = $"Error: {ex.Message}";
-                    IsLoading = false;
-                });
+                ErrorMessage = $"Error: {ex.Message}";
+                IsLoading = false;
             }
         }
 
         // Logic Filters professional
         private void ApplyFilter()
         {
+            if (_allCustomers == null || !_allCustomers.Any())
+            {
+                Customers.ReplaceRange(new List<CustomerDto>());
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(SearchText))
             {
                 // if search empty, show all data
-                Customers?.ReplaceRange(_allCustomers);
+                Customers.ReplaceRange(_allCustomers);
                 return;
             }
 
             // keep the original search text and use a StringComparison for comparisons
-            string query = SearchText ?? string.Empty;
+            string query = SearchText.Trim();
 
             var filtered = _allCustomers.Where(c =>
             {
@@ -219,6 +250,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 {
                     en_CustomerSearchType.Name => 
                     c.CustomerName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
+
                     en_CustomerSearchType.Email => 
                     c.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
 
@@ -235,7 +267,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 };
             }).ToList();
 
-            Customers?.ReplaceRange(filtered);
+            Customers.ReplaceRange(filtered);
         }
 
 
@@ -260,23 +292,28 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         // when delete will be must delete from two list 
         private async Task DeleteCustomer(CustomerDto customerDto)
         {
-            // here add Dialog Show Confirm Dialog
-            var isConfirmed = await _dialogService.ShowConfirmation($"Delete {customerDto.CustomerName}?",
-                "This action cannot be undone. Are you sure you want to proceed?");
+            var result = MessageBox.Show($"Are you sure you want to delete {customerDto.CustomerName}?",
+                                 "Confirm Delete",
+                                 MessageBoxButton.YesNo,
+                                 MessageBoxImage.Warning);
 
-            if (!isConfirmed)
+            if (result != MessageBoxResult.Yes)
                 return;
 
             try
             {
                 IsLoading = true;
-                var result = await _customerService.DeleteAsync(customerDto.CustomerId);
+                var response = await _customerService.DeleteAsync(customerDto.CustomerId);
 
-                if (result.IsSuccess)
+                if (response.IsSuccess)
+                {
                     // EventBus يتولى الـ Reload — ما نحتاج نستدعي LoadData يدوياً
                     _eventBus.Publish(new CustomerDeletedEvent(customerDto.CustomerId));
+                }
                 else
-                    ErrorMessage = result.Error;
+                {
+                    ErrorMessage = response.Error;
+                }
             }
             finally
             {
@@ -290,22 +327,27 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             if (!_allCustomers.Any())
                 return;
 
-            var isConfirmed = await _dialogService.ShowConfirmation(
-                "CRITICAL: Delete All Customers",
-                $"Warning: You are about to wipe all {_allCustomers.Count} records. Are you absolutely sure?");
+            var result = MessageBox.Show("CRITICAL: Do you really want to wipe ALL records?",
+                                 "Delete All Confirmation",
+                                 MessageBoxButton.YesNo,
+                                 MessageBoxImage.Error);
 
-            if (!isConfirmed)
+            if (result != MessageBoxResult.Yes)
                 return;
 
             try
             {
                 IsLoading = true;
-                var result = await _customerService.DeleteAllAsync();
+                var response = await _customerService.DeleteAllAsync();
 
-                if (result.IsSuccess)
+                if (response.IsSuccess)
+                {
                     _eventBus.Publish(new CustomerDeletedAllEvent());
+                }
                 else
-                    ErrorMessage = result.Error;
+                {
+                    ErrorMessage = response.Error;
+                }
             }
             finally
             {

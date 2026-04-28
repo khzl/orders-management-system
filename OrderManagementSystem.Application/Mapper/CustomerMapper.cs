@@ -17,6 +17,8 @@ namespace OrderManagementSystem.Application.Mapper
             Address = entity.Address,
             Phones = entity.CustomerPhones?.Select(p => new CustomerPhoneDto
             {
+                PhoneId = p.PhoneId,
+                CustomerId = p.CustomerId,
                 PhoneNumber = p.PhoneNumber,
                 PhoneType = p.PhoneType,
                 IsPrimary = p.IsPrimary
@@ -31,6 +33,7 @@ namespace OrderManagementSystem.Application.Mapper
             Address = dto.Address,
             CustomerPhones = dto.CustomerPhones?.Select(p => new Entity_CustomerPhones
             {
+                PhoneId = p.PhoneId,
                 PhoneNumber = p.PhoneNumber,
                 PhoneType = p.PhoneType,
                 IsPrimary = p.IsPrimary
@@ -47,6 +50,7 @@ namespace OrderManagementSystem.Application.Mapper
             CustomerPhones = dto.CustomerPhones
             .Select(p => new Entity_CustomerPhones
             {
+                PhoneId = p.PhoneId,
                 PhoneNumber = p.PhoneNumber,
                 PhoneType = p.PhoneType,
                 IsPrimary = p.IsPrimary

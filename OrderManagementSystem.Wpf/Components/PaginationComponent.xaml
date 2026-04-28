@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="OrderManagementSystem.Wpf.Components.PaginationComponent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
+             mc:Ignorable="d" 
+             Background="{StaticResource BackgroundBrush}">
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+        <Button Content="Previous"
+                Command="{Binding PrevCommand, ElementName=Root}"
+                IsEnabled="{Binding CanGoBack, ElementName=Root}"
+                Style="{StaticResource OutlineButtonStyle}" Width="100" Height="60"/>
+
+        <Border Background="{StaticResource PrimaryBrush}" CornerRadius="4"
+                Margin="15,0" Padding="12,5">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Page " Foreground="White"/>
+                <TextBlock Text="{Binding CurrentPage, ElementName=Root}"
+                           FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text=" Of " Foreground="White"/>
+                <TextBlock Text="{Binding TotalPages, ElementName=Root}"
+                           FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+        <Button Content="Next"
+                Command="{Binding NextCommand , ElementName=Root}"
+                IsEnabled="{Binding CanGoForward, ElementName=Root}"
+                Style="{StaticResource OutlineButtonStyle}" Width="100" Height="60"/>
+        
+    </StackPanel>
+    
+</UserControl>

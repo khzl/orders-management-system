@@ -96,15 +96,15 @@ namespace OrderManagementSystem.Wpf
             services.AddTransient<DialogViewModel>();
 
             // Register Customers View Model Here 
-            services.AddTransient<CustomersViewModel>();
+            services.AddSingleton<CustomersViewModel>();
             services.AddTransient<AddCustomerViewModel>();
             services.AddTransient<UpdateCustomerViewModel>();
 
             // Register Orders View Model Here 
-            services.AddTransient<OrdersViewModel>();
+            services.AddSingleton<OrdersViewModel>();
 
             // Register Products View Model Here 
-            services.AddTransient<ProductsViewModel>();
+            services.AddSingleton<ProductsViewModel>();
 
             // UI Registers (DI)
             services.AddSingleton<MainViewModel>();

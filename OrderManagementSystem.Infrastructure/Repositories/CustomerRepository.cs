@@ -30,31 +30,26 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
 
-            // Dictionary For Save Customers and منع التكرار اثناء القراءة 
-            var customerDictionary = new Dictionary<int, Entity_Customer>();
-
-            var customers = await connection.QueryAsync<Entity_Customer, Entity_CustomerPhones, Entity_Customer>(
+            // Used QueryMultiple 
+            var QueryMultiple = await connection.QueryMultipleAsync(
                 "sp_GetCustomers",
-                (customer, phone) =>
-                {
-                    if (!customerDictionary.TryGetValue(customer.CustomerId, out var currentCustomer))
-                    {
-                        currentCustomer = customer;
-                        currentCustomer.CustomerPhones = new List<Entity_CustomerPhones>();
-                        customerDictionary.Add(currentCustomer.CustomerId, currentCustomer);
-                    }
-
-                    if (phone != null)
-                    {
-                        currentCustomer.CustomerPhones.Add(phone);
-                    }
-
-                    return currentCustomer;
-                },
-                splitOn: "PhoneId", // يخبر Dapper أين ينتهي العميل ويبدأ الهاتف
                 commandType: CommandType.StoredProcedure);
 
-            return customerDictionary.Values;
+            var customers = (await QueryMultiple.ReadAsync<Entity_Customer>()).ToList();
+            var phones = (await QueryMultiple.ReadAsync<Entity_CustomerPhones>()).ToList();
+
+            // linked Data 
+            var customerDictionary = customers.ToDictionary(c => c.CustomerId);
+
+            foreach(var phone in phones)
+            {
+                if (customerDictionary.TryGetValue(phone.CustomerId, out var customer))
+                {
+                    customer.CustomerPhones.Add(phone);
+                }
+            }
+
+            return customers;
         }
 
         /// <summary>
@@ -75,12 +70,9 @@ namespace OrderManagementSystem.Infrastructure.Repositories
                 commandType: CommandType.StoredProcedure);
 
             var customer = await multi.ReadFirstOrDefaultAsync<Entity_Customer>();
-
-            if (customer is null)
-                return null;
-
             var phones = await multi.ReadAsync<Entity_CustomerPhones>();
-            customer.CustomerPhones = phones.ToList();
+
+            customer?.CustomerPhones = phones.ToList();
 
             return customer;
         }
@@ -93,7 +85,7 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         /// <param name="phone"></param>
         /// <param name="phoneType"></param>
         /// <returns></returns>
-        public async Task<int> AddAsync(Entity_Customer customer, string phone, string phoneType = "Mobile")
+        public async Task<int> AddAsync(Entity_Customer customer)
         {
             using var connection = _connectionFactory.CreateConnection();
 
@@ -104,8 +96,6 @@ namespace OrderManagementSystem.Infrastructure.Repositories
                     customer.CustomerName,
                     customer.Email,
                     customer.Address,
-                    Phone = phone,
-                    PhoneType = phoneType
                 },
                 commandType: CommandType.StoredProcedure);
 
@@ -119,7 +109,6 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         /// <returns></returns>
         public async Task<int> AddWithPhonesAsync(Entity_Customer customer)
         {
-            // Cast لـ DbConnection لأن IDbConnection ما عنده OpenAsync
             using var connection = (DbConnection)_connectionFactory.CreateConnection();
             await connection.OpenAsync();
 
@@ -127,9 +116,9 @@ namespace OrderManagementSystem.Infrastructure.Repositories
 
             try
             {
-                // Add Customer and Fetch ID 
+                // 1- Add Customer 
                 var customerId = await connection.ExecuteScalarAsync<int>(
-                    "sp_AddCustomerBasic",
+                    "sp_AddCustomer",
                     new
                     {
                         customer.CustomerName,
@@ -139,36 +128,29 @@ namespace OrderManagementSystem.Infrastructure.Repositories
                     transaction: transaction,
                     commandType: CommandType.StoredProcedure);
 
-                // Add Phones 
+                // 2- Add Phones Using SP
                 if (customer.CustomerPhones != null && customer.CustomerPhones.Any())
                 {
-                    const string sql = @"INSERT INTO CustomerPhones
-                                         (CustomerId,PhoneNumber,PhoneType,IsPrimary)
-                                         VALUES (@CustomerId,@PhoneNumber,@PhoneType,@IsPrimary)";
-
-                    // نحول لـ List مرة وحدة بدل ما نحسب First() في كل iteration
-                    var phones = customer.CustomerPhones.ToList();
-
-                    for (int index = 0; index < phones.Count; index++)
+                    foreach (var phone in customer.CustomerPhones)
                     {
-                        await connection.ExecuteAsync(sql, new
-                        {
-                            CustomerId = customerId,
-                            phones[index].PhoneNumber,
-                            phones[index].PhoneType,
-                            IsPrimary = index == 0 // First Number Is Primary
-                        },
-                        transaction: transaction);
+                        await connection.ExecuteAsync(
+                            "sp_AddCustomerPhone",
+                            new
+                            {
+                                CustomerId = customerId,
+                                Phone = phone.PhoneNumber,
+                                PhoneType = phone.PhoneType,
+                                IsPrimary = phone.IsPrimary
+                            },
+                            transaction: transaction,
+                            commandType: CommandType.StoredProcedure);
                     }
                 }
-
-                // Commit 
                 await transaction.CommitAsync();
                 return customerId;
             }
             catch
             {
-                // تحقق قبل الـ Rollback لأن الـ connection ممكن يكون انقطع
                 if (connection.State == ConnectionState.Open)
                     await transaction.RollbackAsync();
 

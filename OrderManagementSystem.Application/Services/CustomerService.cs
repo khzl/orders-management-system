@@ -27,8 +27,13 @@ namespace OrderManagementSystem.Application.Services
         public async Task<Result<IEnumerable<CustomerDto>>> GetAllAsync()
         {
             var customerEntity = await _customerRepo.GetAllAsync();
+
+            if (customerEntity == null || !customerEntity.Any())
+                return Result<IEnumerable<CustomerDto>>.Success(new List<CustomerDto>());
+
             var dtos = customerEntity.Select(CustomerMapper.ToDto).ToList();
-            return Result<IEnumerable<CustomerDto>>.Sucess(dtos);
+
+            return Result<IEnumerable<CustomerDto>>.Success(dtos);
         }
 
         // Get Customer By Id
@@ -42,120 +47,72 @@ namespace OrderManagementSystem.Application.Services
             if (customerEntity is null)
                 return Result<CustomerDto>.Failure($"Customer {customerId} Not Found");
 
-            return Result<CustomerDto>.Sucess(CustomerMapper.ToDto(customerEntity));
+            return Result<CustomerDto>.Success(CustomerMapper.ToDto(customerEntity));
         }
 
-        //  Create Customer 
+        //  Create Customer With Phones 
         public async Task<Result<int>> CreateAsync(CreateCustomerDto createCustomerDto)
         {
-            // Map to the single-customer validation API (existing signature expects a CustomerDto)
-            var customerForValidation = new CustomerDto
-            {
-                CustomerName = createCustomerDto.CustomerName,
-                Email = createCustomerDto.Email,
-                Address = createCustomerDto.Address
-            };
+            if (createCustomerDto == null)
+                return Result<int>.Failure("Invalid Request");
 
-            var customerValidation = Validations.ValidateCustomer(customerForValidation);
-            if (!customerValidation.IsSuccess)
-                return Result<int>.Failure(customerValidation.Error ?? "Customer validation failed");
+            // validation Name 
+            if (string.IsNullOrWhiteSpace(createCustomerDto.CustomerName) ||
+                createCustomerDto.CustomerName.Trim().Length < 3)
+                return Result<int>.Failure("Customer Name Must Be At Least 3 Characters");
 
-            // Validation Phones 
-            if (createCustomerDto.CustomerPhones == null || createCustomerDto.CustomerPhones.Count == 0)
-                return Result<int>.Failure("At least One Phone Number Is Required");
-
-            foreach (var phone in createCustomerDto.CustomerPhones) 
-            {
-                if (string.IsNullOrWhiteSpace(phone?.PhoneNumber))
-                    return Result<int>.Failure("Phone number is required.");
-
-                var phoneValidation = Validations.ValidatePhone(phone.PhoneNumber);
-                if (!phoneValidation.IsSuccess)
-                    return Result<int>.Failure($"Phone '{phone.PhoneNumber}' is invalid: {phoneValidation.Error}");
-            }
-
-            try
-            {
-                var customerEntity = CustomerMapper.ToEntity(createCustomerDto);
-                // Repository expects phones or single phone; use AddWithPhonesAsync because we validated phones above
-                var newCustomerId = await _customerRepo.AddWithPhonesAsync(customerEntity);
-                return Result<int>.Sucess(newCustomerId);
-            }
-            catch (SqlException ex) when (ex.Number == 2627)
-            {
-                return Result<int>.Failure("This Email Is already Registered..");
-            }
-            catch (Exception ex)
-            {
-                return Result<int>.Failure($"Unexpected Error: {ex.Message}");
-            }
-        }
-
-        // Create With Phones Async 
-        public async Task<Result<int>> CreateWithPhonesAsync(CreateCustomerDto createCustomerDto)
-        {
-            // 1. Validate Customer - map Entity_Customer to CustomerDto (existing validation signature)
-            var customerForValidation = new CustomerDto
-            {
-                CustomerName = createCustomerDto.CustomerName,
-                Email = createCustomerDto.Email,
-                Address = createCustomerDto.Address
-            };
-
-            var customerValidation = Validations.ValidateCustomer(customerForValidation);
-            if (!customerValidation.IsSuccess)
-                return Result<int>.Failure(customerValidation.Error ?? "Customer validation failed");
-
-            // 2. Validate Phones
-            if (createCustomerDto.CustomerPhones == null || createCustomerDto.CustomerPhones.Count == 0)
-                return Result<int>.Failure("At least one phone number is required.");
+            // validation Phones 
+            if (createCustomerDto.CustomerPhones == null ||
+                createCustomerDto.CustomerPhones.Count == 0)
+                return Result<int>.Failure("At Least One Phone Number Is Required");
 
             foreach (var phone in createCustomerDto.CustomerPhones)
             {
                 if (string.IsNullOrWhiteSpace(phone.PhoneNumber))
-                    return Result<int>.Failure("Phone number is required.");
+                    return Result<int>.Failure("Phone Number Is Required");
 
                 var phoneValidation = Validations.ValidatePhone(phone.PhoneNumber);
                 if (!phoneValidation.IsSuccess)
-                    return Result<int>.Failure(
-                        $"Phone '{phone.PhoneNumber}' is invalid: {phoneValidation.Error}");
+                    return Result<int>.Failure(phoneValidation.Error!);
             }
 
             try
             {
-                // Map DTO to entity before calling repository (fixes CS1503)
-                var customerEntity = CustomerMapper.ToEntity(createCustomerDto);
-                var newCustomerId = await _customerRepo.AddWithPhonesAsync(customerEntity);
-                return Result<int>.Sucess(newCustomerId);
+                var entity = CustomerMapper.ToEntity(createCustomerDto);
+                var newCustomerId = await _customerRepo.AddWithPhonesAsync(entity);
+                return Result<int>.Success(newCustomerId);
             }
-            catch (SqlException ex) when (ex.Number == 2627) // Unique constraint violation
+            catch (SqlException ex) when (ex.Number == 2627)
             {
-                return Result<int>.Failure("This email is already registered.");
+                return Result<int>.Failure("Email Already Exists");
             }
             catch (Exception ex)
             {
-                return Result<int>.Failure($"Unexpected error: {ex.Message}");
+                return Result<int>.Failure(ex.Message);
             }
         }
+
 
         // Update Customer
         public async Task<Result> UpdateAsync(UpdateCustomerDto updateCustomerDto)
         {
-            var customerForValidation = new CustomerDto
+            if (updateCustomerDto.CustomerId <= 0)
+                return Result.Failure("Invalid Customer Id");
+
+            if (string.IsNullOrWhiteSpace(updateCustomerDto.CustomerName) ||
+                updateCustomerDto.CustomerName.Trim().Length < 3)
+                return Result.Failure("Customer Name Must Be At Least 3 Characters");
+
+            try
             {
-                CustomerName = updateCustomerDto.CustomerName,
-                Email = updateCustomerDto.Email,
-                Address = updateCustomerDto.Address
-            };
-
-            // Validate using the DTO overload that exists
-            var validation = Validations.ValidateCustomer(customerForValidation);
-            if (!validation.IsSuccess)
-                return validation;
-
-            var entity = CustomerMapper.ToEntity(updateCustomerDto);
-            await _customerRepo.UpdateAsync(entity);
-            return Result.Success();
+                var entity = CustomerMapper.ToEntity(updateCustomerDto);
+                await _customerRepo.UpdateAsync(entity);
+                return Result.Success();
+            }
+            catch(Exception ex)
+            {
+                return Result.Failure(ex.Message);
+            }
         }
 
         // Delete Customer by Id 
@@ -187,21 +144,30 @@ namespace OrderManagementSystem.Application.Services
         }
 
         // Add Phone 
-        public async Task<Result> AddPhoneAsync(
-            int customerId,
-            string phone,
-            string phoneType = "Mobile",
-            bool isPrimary = false)
+        public async Task<Result<CustomerPhoneDto>> AddPhoneAsync(CustomerPhoneDto customerPhoneDto)
         {
-            if (customerId <= 0)
-                return Result.Failure("Invalid Customer Id");
+            if (customerPhoneDto == null)
+                return Result<CustomerPhoneDto>.Failure("Phone Data Is Required..");
 
-            var validation = Validations.ValidatePhone(phone);
+            var customer = await _customerRepo.GetByIdAsync(customerPhoneDto.CustomerId);
+            if (customer == null)
+                return Result<CustomerPhoneDto>.Failure("Customer Not Found");
+
+            if (customerPhoneDto.CustomerId <= 0)
+                return Result<CustomerPhoneDto>.Failure("Invalid Customer Id");
+
+            var validation = Validations.ValidatePhone(customerPhoneDto.PhoneNumber!);
             if (!validation.IsSuccess)
-                return validation;
+            {
+                return Result<CustomerPhoneDto>.Failure(validation.Error ?? "Invalid Phone Number");
+            }
+            await _customerRepo.AddPhoneAsync(
+                customerPhoneDto.CustomerId,
+                customerPhoneDto.PhoneNumber!,
+                customerPhoneDto.PhoneType ?? "Mobile",
+                customerPhoneDto.IsPrimary);
 
-            await _customerRepo.AddPhoneAsync(customerId, phone, phoneType, isPrimary);
-            return Result.Success();
+            return Result<CustomerPhoneDto>.Success(customerPhoneDto);
         }
 
         // Delete Phone 

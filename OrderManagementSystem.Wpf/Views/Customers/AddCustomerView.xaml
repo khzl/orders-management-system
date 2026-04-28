@@ -5,202 +5,232 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Views.Customers"
              xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
+             xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000"
+             d:DesignHeight="780" d:DesignWidth="1000"
              Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        
-        <Grid Margin="40">
-            <StackPanel>
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="40">
+                <StackPanel>
 
-                <StackPanel Margin="0,0,0,30">
-                    <Button Command="{Binding CancelCommand}" 
+                    <StackPanel Margin="0,0,0,30">
+                        <Button Command="{Binding CancelCommand}" 
                             HorizontalAlignment="Left" 
                             Background="Transparent" 
                             BorderThickness="0" 
                             Cursor="Hand"
                             Margin="0,0,0,15">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="←" 
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="←" 
                                        FontSize="16" 
                                        Margin="0,0,5,0" 
                                        VerticalAlignment="Center"/>
-                            <TextBlock 
+                                <TextBlock 
                                 Text="Back to Customers List" 
                                 Style="{StaticResource TextMuted}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                            </StackPanel>
+                        </Button>
 
-                    <TextBlock 
+                        <TextBlock 
                         Text="Create New Customer" Style="{StaticResource TextHeading1}" Margin="0,0,0,5"/>
-                    <TextBlock 
+                        <TextBlock 
                         Text="Complete the information below to register a new customer in the system." 
                         Style="{StaticResource TextMuted}"/>
-                </StackPanel>
+                    </StackPanel>
 
-                <Border Style="{StaticResource CardStyle}" 
+                    <Border Style="{StaticResource CardStyle}" 
                         MaxWidth="1400" 
                         HorizontalAlignment="Stretch" 
                         Margin="0,0,20,0"
                         Padding="30">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <Border 
+                            <Border 
                             Grid.Row="0" 
                             Background="#FEE2E2" 
                             CornerRadius="8" 
                             Margin="0,0,0,25" Padding="15,12"
                             Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}">
-                            <TextBlock 
+                                <TextBlock 
                                 Text="{Binding ErrorMessage}" 
                                 Foreground="#B91C1C" FontWeight="Medium"/>
-                        </Border>
+                            </Border>
 
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
-                                <TextBlock Text="Full Name" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <TextBox Style="{StaticResource ModernTextBoxStyle}" 
+                                <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
+                                    <TextBlock Text="Full Name" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Style="{StaticResource ModernTextBoxStyle}" 
                                          Tag="e.g. Khazaal Emad Khazaal"
                                          Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="12,10" VerticalContentAlignment="Center"/>
-                            </StackPanel>
+                                         Padding="12,10" VerticalContentAlignment="Center"
+                                         VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                                </StackPanel>
 
-                            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,10,20">
-                                <TextBlock Text="Email Address" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <TextBox Style="{StaticResource ModernTextBoxStyle}" 
+                                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,10,20">
+                                    <TextBlock Text="Email Address" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Style="{StaticResource ModernTextBoxStyle}" 
                                          Tag="example@domain.com"
                                          Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="12,10" VerticalContentAlignment="Center"/>
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,20">
-                                <Grid Margin="0,0,0,10">
-                                    <TextBlock Text="Phone Contacts Management"
+                                         Padding="12,10" VerticalContentAlignment="Center"
+                                         VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+
+                                <!-- Phone Contacts Management Here -->
+                                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,20">
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="Phone Contacts Management"
                                                FontWeight="Bold" FontSize="16"/>
-                                    <Button Content="+ Add Number"
+                                        <Button Content="+ Add Number"
                                             Command="{Binding AddPhoneCommand}"
                                             HorizontalAlignment="Right"
                                             Style="{StaticResource OutlineButtonStyle}"
                                             Padding="10,2"
                                             FontSize="12"/>
-                                </Grid>
+                                    </Grid>
 
-                                <Border Background="#F8FAFC" CornerRadius="8"
+                                    <!-- Phones Contacts Management Here -->
+                                    <Border Background="#F8FAFC" CornerRadius="8"
                                         Padding="20" BorderThickness="1"
                                         BorderBrush="{StaticResource BorderBrush}">
-                                    <ItemsControl ItemsSource="{Binding CustomerPhones}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding CustomerPhones}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
 
-                                                <Grid Margin="0,0,0,10">
-                                                    
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="2*"/>
-                                                        <ColumnDefinition Width="1*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
+                                                    <Grid Margin="0,0,0,10">
 
-                                                    <Border 
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="2*"/>
+                                                            <ColumnDefinition Width="1*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Border 
                                                         Grid.Column="0" 
                                                         Background="White" 
                                                         CornerRadius="6" 
                                                         BorderThickness="1" 
                                                         BorderBrush="{StaticResource BorderBrush}" 
                                                         Margin="0,0,10,0">
-                                                        <Grid>
-                                                            <TextBlock 
+                                                            <Grid>
+                                                                <TextBlock 
                                                                 Text="📞" 
                                                                 HorizontalAlignment="Left" 
                                                                 VerticalAlignment="Center" 
                                                                 Margin="12,0,0,0" 
                                                                 Foreground="{StaticResource TextSecondaryBrush}" 
                                                                 Panel.ZIndex="1"/>
-                                                            <TextBox Text="{Binding PhoneNumber, 
+                                                                <TextBox Text="{Binding PhoneNumber, 
                                                                      UpdateSourceTrigger=PropertyChanged}"
                                                                      Padding="38,10,10,10" 
                                                                      VerticalContentAlignment="Center"
+                                                                     VerticalAlignment="Stretch"
+                                                                     HorizontalAlignment="Stretch"
                                                                      Background="Transparent"
                                                                      BorderThickness="0"
                                                                      Tag="Phone Number..."/>
-                                                        </Grid>
-                                                    </Border>
-                                                    
-                                                    <ComboBox Grid.Column="1" SelectedValue="{Binding PhoneType}"
-                                                              SelectedValuePath="Content"
+                                                            </Grid>
+                                                        </Border>
+
+                                                        <ComboBox Grid.Column="1" 
+                                                              SelectedValue="{Binding PhoneType , Mode=TwoWay}"
                                                               Margin="0,0,10,0" Height="42"
                                                               VerticalContentAlignment="Center"
                                                               Padding="10,0">
-                                                        <ComboBoxItem Content="Mobile"/>
-                                                        <ComboBoxItem Content="Work"/>
-                                                        <ComboBoxItem Content="Home"/>
-                                                    </ComboBox>
+                                                            <ComboBoxItem Content="Mobile"/>
+                                                            <ComboBoxItem Content="Work"/>
+                                                            <ComboBoxItem Content="Home"/>
+                                                        </ComboBox>
 
-                                                    <Button Grid.Column="2" Command="{Binding DataContext.RemovePhoneCommand,
-                                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        <CheckBox Grid.Column="2"
+                                                              IsChecked="{Binding IsPrimary, Mode=TwoWay}"
+                                                              Content="Primary ⭐"
+                                                              Style="{StaticResource ModernToggleSwitch}"
+                                                              VerticalAlignment="Center"
+                                                              Margin="10,0"
+                                                              Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                                                        <Button Grid.Column="3" 
+                                                            Command="{Binding DataContext.RemovePhoneCommand,
+                                                            RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}"
                                                             Background="#FEE2E2"
                                                             Width="40" Height="40"
                                                             Cursor="Hand">
-                                                        <TextBlock Text="🗑️" Foreground="#B91C1C"
+                                                            <TextBlock Text="🗑️" Foreground="#B91C1C"
                                                                    VerticalAlignment="Center" 
                                                                    HorizontalAlignment="Center"/>
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </Border>
-                            </StackPanel>
+                                                        </Button>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+                                </StackPanel>
 
-                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,30">
-                                <TextBlock Text="Physical Address" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <TextBox Style="{StaticResource ModernTextBoxStyle}" 
+                                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,30">
+                                    <TextBlock Text="Physical Address" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Style="{StaticResource ModernTextBoxStyle}" 
                                          Tag="City, Street, Building No."
                                          Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
-                                         Height="80" VerticalContentAlignment="Top" Padding="12,10" AcceptsReturn="True"
+                                         Height="80" VerticalContentAlignment="Center"
+                                         VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                         Padding="12,10" AcceptsReturn="True"
                                          TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
+                                </StackPanel>
+                            </Grid>
 
-                        <Border Grid.Row="2" 
+                            <Border Grid.Row="2" 
                                 BorderBrush="{StaticResource BorderBrush}" 
                                 BorderThickness="0,1,0,0" Padding="0,25,0,0">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="Cancel"
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Cancel"
                                         Command="{Binding CancelCommand}"
                                         Style="{StaticResource OutlineButtonStyle}"
                                         Width="120" Height="45" Margin="0,0,15,0"/>
-                                <Button Content="Save Customer"
+                                    <Button Content="Save Customer"
                                         Command="{Binding SaveCommand}"
+                                        IsEnabled="{Binding IsLoading,
+                                        Converter={StaticResource InverseBoolConverter}}"
                                         Style="{StaticResource PrimaryButtonStyle}"
                                         Width="180" Height="45"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Border>
-            </StackPanel>
-        </Grid>
-    </ScrollViewer>
-    
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Loading Overlay Component -->
+        <components:LoadingOverlayComponent
+             Visibility="{Binding IsLoading,
+             Converter={StaticResource BoolToVisibilityConverter}}"
+             Panel.ZIndex="1000"/>
+        
+    </Grid>
 </UserControl>

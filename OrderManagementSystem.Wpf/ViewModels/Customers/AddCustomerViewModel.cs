@@ -12,6 +12,8 @@ using System.ComponentModel;
 using System.Collections.ObjectModel;
 using OrderManagementSystem.Application.Commons;
 using OrderManagementSystem.Dtos.Customers;
+using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
+using OrderManagementSystem.Wpf.ClientServices.EvenService;
 
 namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
@@ -20,6 +22,12 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         // private field 
         private readonly ICustomerService _customerService;
         private readonly INavigationService _navigationService;
+        private readonly IEventBus _eventBus; // add Event After Save 
+
+
+        // List Phones
+        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; set; } = new();
+
 
         // Property Binding
         private string? _customerName;
@@ -44,28 +52,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        private string? _phone;
-        public string? Phone 
-        {
-            get => _phone;
-            set
-            {
-                _phone = value;
-                OnPropertyChanged(nameof(Phone));
-            }
-        }
-
-        private string? _phoneType;
-        public string? PhoneType 
-        {
-            get => _phoneType;
-            set
-            {
-                _phoneType = value;
-                OnPropertyChanged(nameof(PhoneType));
-            }
-        }
-
         private string? _address;
         public string? Address 
         {
@@ -77,7 +63,28 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // private field 
+        private string? _phoneType;
+        public string? PhoneType
+        {
+            get => _phoneType;
+            set
+            {
+                _phoneType = value;
+                OnPropertyChanged(nameof(PhoneType));
+            }
+        }
+
+        private bool _isPrimary;
+        public bool IsPrimary
+        {
+            get => _isPrimary;
+            set
+            {
+                _isPrimary = value;
+                OnPropertyChanged(nameof(IsPrimary));
+            }
+        }
+
         private string? _errorMessage;
         public string? ErrorMessage
         {
@@ -89,9 +96,17 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // List Phones
-        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; set; } = new();
-       
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
         //Commands
         public ICommand? SaveCommand { get; }
         public ICommand? CancelCommand { get; }
@@ -99,10 +114,14 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         public ICommand? RemovePhoneCommand { get; }
 
         // Constructor 
-        public AddCustomerViewModel(ICustomerService customerService,INavigationService navigationService)
+        public AddCustomerViewModel(
+            ICustomerService customerService,
+            INavigationService navigationService,
+            IEventBus eventBus)
         {
             _customerService = customerService;
             _navigationService = navigationService;
+            _eventBus = eventBus;
 
             // Add First field Phones Auto when Open Screen
             // رقم واحد افتراضي عند الفتح
@@ -112,73 +131,83 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 IsPrimary = true
             });
 
-            AddPhoneCommand = new RelayCommand(_ => CustomerPhones.Add(new CustomerPhoneDto
+            AddPhoneCommand = new RelayCommand(_ => 
             {
-                PhoneType = "Mobile"
-            }));
+                CustomerPhones.Add(new CustomerPhoneDto
+                {
+                    PhoneType = "Mobile",
+                    IsPrimary = false
+                });
+            });
 
             RemovePhoneCommand = new RelayCommand(phoneObj =>
             {
                 if (phoneObj is CustomerPhoneDto phone && CustomerPhones.Count > 1)
+                {
                     CustomerPhones.Remove(phone);
+
+                    // Ensure One Primary Always Exists
+                    if (!CustomerPhones.Any(p => p.IsPrimary))
+                        CustomerPhones.First().IsPrimary = true;
+                }
             });
 
             SaveCommand = new AsyncRelayCommand(_ => Save());
             CancelCommand = new RelayCommand(_ => GoBack());
         }
 
-        // Save 
+        // Method For Save New Customer  
         private async Task Save()
         {
             ErrorMessage = null;
+            IsLoading = true;
 
-            if (!ValidateData())
-                return;
-
-            var createCustomerDto = new CreateCustomerDto
+            try
             {
-                CustomerName = CustomerName,
-                Email = Email,
-                Address = Address,
-                CustomerPhones = CustomerPhones.ToList() // تحويل الـ Collection لقائمة
-            };
+                if (!ValidateData())
+                    return;
 
-            Result<int> result;
+                // Ensure Only One Primary 
+                var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary);
+                foreach (var phone in CustomerPhones)
+                    phone.IsPrimary = phone == primary;
 
-            if (createCustomerDto.CustomerPhones.Count == 1)
-            {
-                var firstPhone = createCustomerDto.CustomerPhones.First();
-                // validation earlier ensures PhoneNumber is not null/whitespace; use `!` to satisfy the compiler.
-                result = await _customerService.CreateAsync(createCustomerDto);
+                var createCustomerDto = new CreateCustomerDto
+                {
+                    CustomerName = CustomerName,
+                    Email = Email,
+                    Address = Address,
+                    CustomerPhones = CustomerPhones.ToList() // تحويل الـ Collection لقائمة
+                };
+
+                var result = await _customerService.CreateAsync(createCustomerDto);
+
+                if (result.IsSuccess)
+                {
+                    _eventBus.Publish(new CustomerCreatedEvent(result.Data));
+                    _navigationService.NavigateTo<CustomersViewModel>();
+                }
+                else
+                {
+                    ErrorMessage = result.Error;
+                }
             }
-            else
+            finally
             {
-                // if be many phones used method transaction 
-                result = await _customerService.CreateWithPhonesAsync(createCustomerDto);
-            }
-
-            // result Handling
-            if (result.IsSuccess)
-            {
-                // After Save GoBack Customers View
-                _navigationService.NavigateTo<CustomersViewModel>();
-            }
-            else
-            {
-                ErrorMessage = result.Error;
+                IsLoading = false;
             }
         }
 
         // Method to Check Validation Logic
         private bool ValidateData()
         {
-            if (string.IsNullOrWhiteSpace(CustomerName))
+            if (string.IsNullOrWhiteSpace(CustomerName) || CustomerName.Length < 3)
             {
-                ErrorMessage = "Customer Name is required.";
+                ErrorMessage = "Customer Name Must Be At Least 3 Characters";
                 return false;
             }
 
-            if (CustomerPhones == null || !CustomerPhones.Any() || string.IsNullOrWhiteSpace(CustomerPhones[0].PhoneNumber))
+            if (!CustomerPhones.Any())
             {
                 ErrorMessage = "At least one primary phone number is required.";
                 return false;
@@ -187,9 +216,9 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             // فحص كل الأرقام المضافة في القائمة
             foreach (var p in CustomerPhones)
             {
-                if (string.IsNullOrWhiteSpace(p.PhoneNumber) || p.PhoneNumber.Length < 10)
+                if (string.IsNullOrWhiteSpace(p.PhoneNumber))
                 {
-                    ErrorMessage = "All phone numbers must be valid and at least 10 digits.";
+                    ErrorMessage = "Phone Number Is Required..";
                     return false;
                 }
             }

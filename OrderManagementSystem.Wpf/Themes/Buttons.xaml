@@ -74,5 +74,23 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <!-- Ghost Button Style -->
+    <Style x:Key="GhostToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#F1F5F9"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="#E2E8F0"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
     
 </ResourceDictionary>

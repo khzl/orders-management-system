@@ -13,13 +13,12 @@ namespace OrderManagementSystem.Application.Interfaces
         public Task<Result<IEnumerable<CustomerDto>>> GetAllAsync();
         public Task<Result<CustomerDto>> GetByIdAsync(int customerId);
         public Task<Result<int>> CreateAsync(CreateCustomerDto createCustomerDto);
-        public Task<Result<int>> CreateWithPhonesAsync(CreateCustomerDto createCustomerDto);
         public Task<Result> UpdateAsync(UpdateCustomerDto updateCustomerDto);
         public Task<Result> DeleteAsync(int customerId);
         public Task<Result> DeleteAllAsync();
 
         // Phone Management
-        public Task<Result> AddPhoneAsync(int customerId, string phone, string phoneType = "Mobile", bool isPrimary = false);
+        public Task<Result<CustomerPhoneDto>> AddPhoneAsync(CustomerPhoneDto customerPhoneDto);
         public Task<Result> DeletePhoneAsync(int phoneId);
     }
 }

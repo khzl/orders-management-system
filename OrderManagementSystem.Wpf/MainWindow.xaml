@@ -7,8 +7,10 @@
         xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
         xmlns:viewModels="clr-namespace:OrderManagementSystem.Wpf.ViewModels"
         xmlns:customerViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Customers"
+        xmlns:orderViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Orders"
         xmlns:views="clr-namespace:OrderManagementSystem.Wpf.Components"
         xmlns:customerViews="clr-namespace:OrderManagementSystem.Wpf.Views.Customers"
+        xmlns:orderViews="clr-namespace:OrderManagementSystem.Wpf.Views.Orders"
         xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
         mc:Ignorable="d"
         Title="Orders Management System" Height="720" Width="1280"
@@ -37,7 +39,9 @@
         </DataTemplate>
         
         <!-- linked Navigation To OrdersView And AddOrdersView And UpdateOrdersView -->
-        
+        <DataTemplate DataType="{x:Type orderViewModel:OrdersViewModel}">
+            <orderViews:OrdersView/>
+        </DataTemplate>
         <!-- linked Navigation To ProductsView And AddProductsView And UpdateProductsView -->
         
         <!-- Linked Converter here-->
