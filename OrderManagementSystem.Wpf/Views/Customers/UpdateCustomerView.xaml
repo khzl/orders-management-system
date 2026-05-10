@@ -174,9 +174,10 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <components:LoadingOverlayComponent 
+                <!--<components:LoadingOverlayComponent 
                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
-                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>-->
+                
             </Grid>
         </Border>
     </Grid>
