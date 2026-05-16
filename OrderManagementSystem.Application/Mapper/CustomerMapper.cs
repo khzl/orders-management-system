@@ -47,10 +47,14 @@ namespace OrderManagementSystem.Application.Mapper
             CustomerName = dto.CustomerName,
             Email = dto.Email,
             Address = dto.Address,
+
+            DeletedPhoneIds = dto.DeletedPhoneIds,
+
             CustomerPhones = dto.CustomerPhones
             .Select(p => new Entity_CustomerPhones
             {
                 PhoneId = p.PhoneId,
+                CustomerId = p.CustomerId,
                 PhoneNumber = p.PhoneNumber,
                 PhoneType = p.PhoneType,
                 IsPrimary = p.IsPrimary

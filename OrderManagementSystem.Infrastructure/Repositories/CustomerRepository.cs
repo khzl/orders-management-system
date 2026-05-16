@@ -7,6 +7,7 @@ using System.Data;
 using OrderManagementSystem.Infrastructure.DBContext;
 using OrderManagementSystem.Domain.Entities;
 using System.Data.Common;
+using OrderManagementSystem.Shared;
 
 namespace OrderManagementSystem.Infrastructure.Repositories
 {
@@ -26,30 +27,50 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         ///  Get All Customer With Primary Phones Only
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<Entity_Customer>> GetAllAsync()
+        public async Task<PaginationResult<Entity_Customer>> GetAllAsync(int pageNumber,int pageSize)
         {
             using var connection = _connectionFactory.CreateConnection();
 
             // Used QueryMultiple 
-            var QueryMultiple = await connection.QueryMultipleAsync(
+            var result = await connection.QueryMultipleAsync(
                 "sp_GetCustomers",
+                new
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                },
                 commandType: CommandType.StoredProcedure);
 
-            var customers = (await QueryMultiple.ReadAsync<Entity_Customer>()).ToList();
-            var phones = (await QueryMultiple.ReadAsync<Entity_CustomerPhones>()).ToList();
+            var customers = 
+                (await result.ReadAsync<Entity_Customer>()).ToList();
 
-            // linked Data 
-            var customerDictionary = customers.ToDictionary(c => c.CustomerId);
+            var phones = 
+                (await result.ReadAsync<Entity_CustomerPhones>()).ToList();
+
+            var totalCount =
+                await result.ReadFirstAsync<int>();
+
+            // linked Phones to Customers Using Dictionary For Fast Lookup
+            var customerDictionary = 
+                customers.ToDictionary(c => c.CustomerId);
 
             foreach(var phone in phones)
             {
-                if (customerDictionary.TryGetValue(phone.CustomerId, out var customer))
+                if (customerDictionary.TryGetValue
+                    (phone.CustomerId, 
+                    out var customer))
                 {
                     customer.CustomerPhones.Add(phone);
                 }
             }
 
-            return customers;
+            return new PaginationResult<Entity_Customer>
+            {
+                Data = customers,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
         }
 
         /// <summary>
@@ -168,16 +189,79 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
 
-            await connection.ExecuteAsync(
-                "sp_UpdateCustomer",
-                new
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Update Customer 
+                await connection.ExecuteAsync(
+                    "sp_UpdateCustomer",
+                    new
+                    {
+                        customer.CustomerId,
+                        customer.CustomerName,
+                        customer.Email,
+                        customer.Address
+                    },
+                    transaction,
+                    commandType: CommandType.StoredProcedure);
+
+                // Delete Phones 
+                foreach (var phoneId in customer.DeletedPhoneIds ?? new List<int>())
                 {
-                    customer.CustomerId,
-                    customer.CustomerName,
-                    customer.Email,
-                    customer.Address
-                },
-                commandType: CommandType.StoredProcedure);
+                    await connection.ExecuteAsync(
+                        "sp_DeleteCustomerPhone",
+                        new
+                        {
+                            PhoneId = phoneId
+                        },
+                        transaction,
+                        commandType: CommandType.StoredProcedure);
+                }
+
+                // Add Or Update Phones
+                foreach (var phone in customer.CustomerPhones ?? new List<Entity_CustomerPhones>())
+                {
+                    if (phone.PhoneId > 0)
+                    {
+                        // Update Phone 
+                        await connection.ExecuteAsync(
+                            "sp_UpdateCustomerPhone",
+                            new
+                            {
+                                phone.PhoneId,
+                                phone.PhoneNumber,
+                                phone.PhoneType,
+                                phone.IsPrimary
+                            },
+                            transaction,
+                            commandType: CommandType.StoredProcedure);
+                    }
+                    else
+                    {
+                        // Add Phone
+                        await connection.ExecuteAsync(
+                            "sp_AddCustomerPhone",
+                            new
+                            {
+                                customer.CustomerId,
+                                phone.PhoneNumber,
+                                phone.PhoneType,
+                                phone.IsPrimary
+                            },
+                            transaction,
+                            commandType: CommandType.StoredProcedure);
+                    }
+                }
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         /// <summary>

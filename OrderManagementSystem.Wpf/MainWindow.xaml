@@ -8,9 +8,15 @@
         xmlns:viewModels="clr-namespace:OrderManagementSystem.Wpf.ViewModels"
         xmlns:customerViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Customers"
         xmlns:orderViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Orders"
+        xmlns:productViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Products"
+        xmlns:reportViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels.Reports"
+        xmlns:settingsViewModel="clr-namespace:OrderManagementSystem.Wpf.ViewModels"
         xmlns:views="clr-namespace:OrderManagementSystem.Wpf.Components"
         xmlns:customerViews="clr-namespace:OrderManagementSystem.Wpf.Views.Customers"
         xmlns:orderViews="clr-namespace:OrderManagementSystem.Wpf.Views.Orders"
+        xmlns:productViews="clr-namespace:OrderManagementSystem.Wpf.Views.Products"
+        xmlns:reportViews="clr-namespace:OrderManagementSystem.Wpf.Views.Reports"
+        xmlns:settingViews="clr-namespace:OrderManagementSystem.Wpf.Views"
         xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
         mc:Ignorable="d"
         Title="Orders Management System" Height="720" Width="1280"
@@ -42,10 +48,29 @@
         <DataTemplate DataType="{x:Type orderViewModel:OrdersViewModel}">
             <orderViews:OrdersView/>
         </DataTemplate>
+        
+        
         <!-- linked Navigation To ProductsView And AddProductsView And UpdateProductsView -->
+        <DataTemplate DataType="{x:Type productViewModel:ProductsViewModel}">
+            <productViews:ProductsView/>
+        </DataTemplate>
+        
+        
+        <!-- linked Navigation To Reports Views -->
+        <DataTemplate DataType="{x:Type reportViewModel:ReportsViewModel}">
+            <reportViews:ReportsView/>
+        </DataTemplate>
+        
+        
+        <!-- linked Navigation To Settings Views-->
+        <DataTemplate DataType="{x:Type settingsViewModel:SettingsViewModel}">
+            <settingViews:SettingsView/>
+        </DataTemplate>
+        
         
         <!-- Linked Converter here-->
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        
     </Window.Resources>
 
     <Grid>
@@ -61,7 +86,9 @@
                                      DashboardCommand="{Binding GoToDashboardCommand}"
                                      CustomersCommand="{Binding GoToCustomersCommand}"
                                      OrdersCommand="{Binding GoToOrdersCommand}"
-                                     ProductsCommand="{Binding GoToProductsCommand}"/>
+                                     ProductsCommand="{Binding GoToProductsCommand}"
+                                     ReportsCommand="{Binding GoToReportsCommand}"
+                                     SettingsCommand="{Binding GoToSettingsCommand}"/>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
@@ -134,7 +161,7 @@
             </Border>
         </Grid>
 
-        <!-- CustomerDialogView Components Here -->
+        <!-- CustomerDialogView Components Here --><!--
         <Grid Grid.ColumnSpan="2"
               Background="#40000000"
               Visibility="{Binding IsDialogVisible, Converter={StaticResource BoolToVisibilityConverter}}"
@@ -148,11 +175,12 @@
                     <ScaleTransform ScaleX="1" ScaleY="1"/>
                 </components:CustomDialogViewComponent.RenderTransform>
             </components:CustomDialogViewComponent>
-        </Grid>
+        </Grid>-->
 
         <!-- Dialog Overlay يظهر هنا تبع ال CustomMessageBox -->
-        <ContentControl Content="{Binding CurrentDialog}"
+        <!--<ContentControl Content="{Binding CurrentDialog}"
                         Visibility="{Binding IsDialogVisible,Converter={StaticResource BoolToVisibilityConverter}}"
-                        Panel.ZIndex="999"/>
+                        Panel.ZIndex="999"/>-->
+        
     </Grid>
 </Window>

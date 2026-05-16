@@ -338,17 +338,22 @@
                                Foreground="{StaticResource TextSecondaryBrush}"/>
                 </StackPanel>-->
 
-                    <components:LoadingOverlayComponent Visibility="{Binding IsLoading,
-                                                     Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <!--<components:LoadingOverlayComponent Visibility="{Binding IsLoading,
+                                                     Converter={StaticResource BoolToVisibilityConverter}}"/>-->
+
                 </Grid>
             </Border>
-            <Border Grid.Row="1" Background="{StaticResource BorderBrush}">
-                <components:PaginationComponent Grid.Row="1"
-                                            CurrentPage="{Binding CurrentPage}"
-                                            TotalPages="{Binding TotalPages}"
-                                            NextCommand="{Binding NextPageCommand}"
-                                            PrevCommand="{Binding PrevPageCommand}"
-                                            Margin="0,10,0,0"/>
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource CardStyle}"
+                    Margin="0,15,0,0"
+                    Padding="10,5"
+                    VerticalAlignment="Bottom">
+                <components:PaginationComponent
+                            CurrentPage="{Binding CurrentPage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            TotalPages="{Binding TotalPages , Mode=TwoWay}"
+                            NextCommand="{Binding NextPageCommand}"
+                            PrevCommand="{Binding PrevPageCommand}"/>
             </Border>
         </Grid>
     </Grid>

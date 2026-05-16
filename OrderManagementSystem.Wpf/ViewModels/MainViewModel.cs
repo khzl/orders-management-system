@@ -9,6 +9,7 @@ using OrderManagementSystem.Wpf.Helper;
 using OrderManagementSystem.Wpf.ViewModels.Customers;
 using OrderManagementSystem.Wpf.ViewModels.Orders;
 using OrderManagementSystem.Wpf.ViewModels.Products;
+using OrderManagementSystem.Wpf.ViewModels.Reports;
 
 namespace OrderManagementSystem.Wpf.ViewModels
 {
@@ -48,6 +49,9 @@ namespace OrderManagementSystem.Wpf.ViewModels
         public ICommand? GoToCustomersCommand { get; } // ReadOnly
         public ICommand? GoToOrdersCommand { get; } // ReadOnly
         public ICommand? GoToProductsCommand { get; } // ReadOnly
+        public ICommand? GoToReportsCommand { get; } // ReadOnly
+        public ICommand? GoToSettingsCommand { get; } // ReadOnly
+
 
         // public Constructor (Constructor Injection)
         public MainViewModel(INavigationService navigationService)
@@ -58,6 +62,8 @@ namespace OrderManagementSystem.Wpf.ViewModels
             GoToCustomersCommand = new RelayCommand(_ => _navigationService.NavigateTo<CustomersViewModel>());
             GoToOrdersCommand = new RelayCommand(_ => _navigationService.NavigateTo<OrdersViewModel>());
             GoToProductsCommand = new RelayCommand(_ => _navigationService.NavigateTo<ProductsViewModel>());
+            GoToReportsCommand = new RelayCommand(_ => _navigationService.NavigateTo<ReportsViewModel>());
+            GoToSettingsCommand = new RelayCommand(_ => _navigationService.NavigateTo<SettingsViewModel>());
 
             // Default View Over Open
             _navigationService.NavigateTo<DashboardViewModel>();

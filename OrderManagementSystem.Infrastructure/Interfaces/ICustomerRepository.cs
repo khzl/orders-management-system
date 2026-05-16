@@ -1,4 +1,5 @@
 ﻿using OrderManagementSystem.Domain.Entities;
+using OrderManagementSystem.Shared;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
@@ -11,7 +12,7 @@ namespace OrderManagementSystem.Infrastructure.Interfaces
         // Contracts 
 
         // Customer CRUD
-        public Task<IEnumerable<Entity_Customer>> GetAllAsync();
+        public Task<PaginationResult<Entity_Customer>> GetAllAsync(int pageNumber, int pageSize);
         public Task<Entity_Customer?> GetByIdAsync(int customerId);
         public Task<int> AddAsync(Entity_Customer customer);
         public Task<int> AddWithPhonesAsync(Entity_Customer customer);

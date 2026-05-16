@@ -477,5 +477,23 @@
         </Setter>
     </Style>
 
+    <!-- SettingsCard Style -->
+    <Style x:Key="SettingsCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="Margin" Value="0,0,0,20"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#EAEAEA"/>
+    </Style>
+
+    <!--ModernCheckBox Style-->
+    <Style x:Key="ModernCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="#4A4A4A"/>
+        <Setter Property="Margin" Value="0,8,0,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    
     
 </ResourceDictionary>

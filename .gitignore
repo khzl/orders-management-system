@@ -24,3 +24,6 @@
 /OrderManagementSystem.Dtos/bin/Debug/net10.0
 /OrderManagementSystem.Dtos/obj
 /OrderManagementSystem.Dtos/OrderManagementSystem.Dtos.csproj
+/OrderManagementSystem.Shared/bin/Debug/net10.0
+/OrderManagementSystem.Shared/obj
+/OrderManagementSystem.Shared/OrderManagementSystem.Shared.csproj

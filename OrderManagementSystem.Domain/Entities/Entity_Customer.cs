@@ -16,6 +16,9 @@ namespace OrderManagementSystem.Domain.Entities
 
         // Navigation Property
         public ICollection<Entity_CustomerPhones> CustomerPhones { get; set; } = new List<Entity_CustomerPhones>();
+
+        // فقط للتبع اثناء التحديث 
+        public List<int>? DeletedPhoneIds { get; set; } = new();
         #endregion
     }
 }

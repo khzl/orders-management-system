@@ -5,6 +5,7 @@ using OrderManagementSystem.Application.Mapper;
 using OrderManagementSystem.Domain.Entities;
 using OrderManagementSystem.Dtos.Customers;
 using OrderManagementSystem.Infrastructure.Interfaces;
+using OrderManagementSystem.Shared;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -24,17 +25,24 @@ namespace OrderManagementSystem.Application.Services
         }
 
         // Get All Customer 
-        public async Task<Result<IEnumerable<CustomerDto>>> GetAllAsync()
+        public async Task<Result<PaginationResult<CustomerDto>>> GetAllAsync(int pageNumber,int pageSize)
         {
-            var customerEntity = await _customerRepo.GetAllAsync();
+            var result = 
+                await _customerRepo.GetAllAsync(pageNumber,pageSize);
 
-            if (customerEntity == null || !customerEntity.Any())
-                return Result<IEnumerable<CustomerDto>>.Success(new List<CustomerDto>());
+            var dtos = 
+                result.Data.Select(CustomerMapper.ToDto).ToList();
 
-            var dtos = customerEntity.Select(CustomerMapper.ToDto).ToList();
-
-            return Result<IEnumerable<CustomerDto>>.Success(dtos);
+            return Result<PaginationResult<CustomerDto>>.Success(
+                new PaginationResult<CustomerDto>
+                {
+                    Data = dtos,
+                    CurrentPage = result.CurrentPage,
+                    PageSize = result.PageSize,
+                    TotalCount = result.TotalCount
+                });
         }
+
 
         // Get Customer By Id
         public async Task<Result<CustomerDto>> GetByIdAsync(int customerId)

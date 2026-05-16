@@ -11,6 +11,7 @@ using OrderManagementSystem.Wpf.ViewModels;
 using OrderManagementSystem.Wpf.ViewModels.Customers;
 using OrderManagementSystem.Wpf.ViewModels.Orders;
 using OrderManagementSystem.Wpf.ViewModels.Products;
+using OrderManagementSystem.Wpf.ViewModels.Reports;
 using System.IO;
 using System.Windows;
 using Applications = System.Windows.Application; // Solution Here
@@ -95,20 +96,25 @@ namespace OrderManagementSystem.Wpf
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<DialogViewModel>();
 
-            // Register Customers View Model Here 
+            // Register Customers ViewModel Here 
             services.AddSingleton<CustomersViewModel>();
             services.AddTransient<AddCustomerViewModel>();
             services.AddTransient<UpdateCustomerViewModel>();
 
-            // Register Orders View Model Here 
+            // Register Orders ViewModel Here 
             services.AddSingleton<OrdersViewModel>();
 
-            // Register Products View Model Here 
+            // Register Products ViewModel Here 
             services.AddSingleton<ProductsViewModel>();
+
+            // Register Reports ViewModel Here 
+            services.AddSingleton<ReportsViewModel>();
+
+            // Register Settings ViewModel Here 
+            services.AddSingleton<SettingsViewModel>();
 
             // UI Registers (DI)
             services.AddSingleton<MainViewModel>();
-
             services.AddSingleton<MainWindow>();
         }
 

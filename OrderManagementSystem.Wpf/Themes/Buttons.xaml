@@ -51,6 +51,11 @@
     <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
         <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/> <!-- Dynamic -->
     </Style>
+
+    <!-- Secondary Button Style Inheritance From Base Button Style -->
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource SecondaryBrush}"/> <!-- Dynamic -->
+    </Style>
     
     <!-- Success Button Style Inheritance From Base Button Styles -->
     <Style x:Key="SuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">

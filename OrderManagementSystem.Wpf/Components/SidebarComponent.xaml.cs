@@ -32,6 +32,13 @@ namespace OrderManagementSystem.Wpf.Components
         public static readonly DependencyProperty ProductsCommandProperty =
             DependencyProperty.Register(nameof(ProductsCommand), typeof(ICommand), typeof(SidebarComponent));
 
+        public static readonly DependencyProperty ReportsCommandProperty =
+            DependencyProperty.Register(nameof(ReportsCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        public static readonly DependencyProperty SettingsCommandProperty =
+            DependencyProperty.Register(nameof(SettingsCommand), typeof(ICommand), typeof(SidebarComponent));
+
+        // Add Commands
         public ICommand DashboardCommand
         {
             get => (ICommand)GetValue(DashboardCommandProperty);
@@ -51,6 +58,16 @@ namespace OrderManagementSystem.Wpf.Components
         {
             get => (ICommand)GetValue(ProductsCommandProperty);
             set => SetValue(ProductsCommandProperty, value);
+        }
+        public ICommand ReportsCommand
+        {
+            get => (ICommand)GetValue(ReportsCommandProperty);
+            set => SetValue(ReportsCommandProperty, value);
+        }
+        public ICommand SettingsCommand
+        {
+            get => (ICommand)GetValue(SettingsCommandProperty);
+            set => SetValue(SettingsCommandProperty, value);
         }
 
         public SidebarComponent() => InitializeComponent();

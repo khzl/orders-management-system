@@ -24,6 +24,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         private readonly ICustomerService _customerService;
         private readonly INavigationService _navigationService;
         private readonly IEventBus _eventBus;
+        private readonly List<int> _deletedPhoneIds = new(); // To Track Deleted Phones
 
         // Property Binding 
         private int _customerId;
@@ -130,12 +131,13 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             CancelCommand = new RelayCommand(_ => GoBack());
 
             // method add phone empty for list to make user set 
-            AddPhoneCommand = new AsyncRelayCommand(_ => AddPhone());
+            // Because Operation Add Phone Local Not DB (DB Operation Just Delete)
+            AddPhoneCommand = new RelayCommand(_ => AddPhone());
 
-            DeletePhoneCommand = new AsyncRelayCommand(async obj =>
+            DeletePhoneCommand = new RelayCommand(obj =>
             {
                 if (obj is CustomerPhoneDto phone)
-                    await DeletePhone(phone);
+                    DeletePhone(phone); // Local Delete Just Remove From List And Add Id To Deleted List To Delete It When Save 
             });
         }
 
@@ -174,12 +176,23 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 IsLoading = true;
 
+                var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary);
+
+                foreach (var phone in CustomerPhones)
+                    phone.IsPrimary = phone == primary;
+
                 var updateCustomerDto = new UpdateCustomerDto
                 {
                     CustomerId = CustomerId,
                     CustomerName = CustomerName,
                     Email = Email,
-                    Address = Address
+                    Address = Address,
+
+                    // Current Available On Screen
+                    CustomerPhones = CustomerPhones.ToList(),
+
+                    // Deleted Phones Ids To Delete It When Save 
+                    DeletedPhoneIds = _deletedPhoneIds
                 };
 
                 var result = await _customerService.UpdateAsync(updateCustomerDto);
@@ -201,73 +214,50 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // Add Phone (DB)
-        private async Task AddPhone()
+        // Add Phone (Local)
+        private Task AddPhone()
         {
-            var newPhone = new CustomerPhoneDto
+            CustomerPhones.Add(new CustomerPhoneDto
             {
                 CustomerId = CustomerId,
                 PhoneNumber = "",
                 PhoneType = "Mobile",
                 IsPrimary = false
-            };
+            });
 
-            try
-            {
-                IsLoading = true;
-                ErrorMessage = null;
-
-                var result = await _customerService.AddPhoneAsync(newPhone);
-
-                if (result.IsSuccess)
-                {
-                    if (result.Data != null)
-                    {
-                        CustomerPhones.Add(result.Data);
-                    }
-                }
-                else
-                {
-                    ErrorMessage = "Failed To Add Phone: " + result.Error;
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = "Error Adding Phone: " + ex.Message;
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            return Task.CompletedTask;
         }
+
 
         // Delete Phone (DB) 
-        private async Task DeletePhone(CustomerPhoneDto customerPhoneDto)
+        private Task DeletePhone(CustomerPhoneDto customerPhoneDto)
         {
             if (customerPhoneDto == null)
-                return;
+                return Task.CompletedTask;
 
-            try
+            // If Phone Has Id -> Means Exist in DB -> Add To Deleted List To Delete It When Save 
+            if (customerPhoneDto.PhoneId > 0) 
             {
-                IsLoading = true;
-                // عملية الحذف تعتمد على  PhoneId و هذا مهم لعملية الحذف 
-                if (customerPhoneDto.PhoneId > 0)
-                {
-                    await _customerService.DeletePhoneAsync(customerPhoneDto.PhoneId);
-                }
-                CustomerPhones.Remove(customerPhoneDto);
+                _deletedPhoneIds.Add(customerPhoneDto.PhoneId);
             }
-            finally
+
+            CustomerPhones.Remove(customerPhoneDto);
+
+            // Ensure One Primary Just 
+            if (CustomerPhones.Any() && !CustomerPhones.Any(p => p.IsPrimary))
             {
-                IsLoading = false;
+                CustomerPhones.First().IsPrimary = true;
             }
+
+            return Task.CompletedTask;
         }
+
 
         // Cancel -> GoBack
         private void GoBack()
         {
             _navigationService.NavigateTo<CustomersViewModel>();
         }
+
     }
 }

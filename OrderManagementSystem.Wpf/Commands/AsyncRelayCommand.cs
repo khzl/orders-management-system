@@ -9,19 +9,28 @@ namespace OrderManagementSystem.Wpf.Commands
     {
         private readonly Func<object?, Task> _execute;
         private readonly Func<object?, bool>? _canExecute;
+
         private bool _isExecuting;
 
         // Constructor
-        public AsyncRelayCommand(Func<object?, Task> execute, Func<object?, bool>? canExecute = null)
+        public AsyncRelayCommand(Func<object?, Task> execute, 
+                                 Func<object?, bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
+
         public event EventHandler? CanExecuteChanged
         {
             add => CommandManager.RequerySuggested += value;
             remove => CommandManager.RequerySuggested -= value;
+        }
+
+        // لتحديث حالة الازرار يدويا عند تغيير حالة التنفيذ 
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
         }
 
         // يمنع التنفيذ المتكرر أثناء انتظار الـ async
@@ -32,17 +41,16 @@ namespace OrderManagementSystem.Wpf.Commands
         {
             if (!CanExecute(parameter)) return;
 
-            _isExecuting = true;
-            CommandManager.InvalidateRequerySuggested();
-
             try
             {
+                _isExecuting = true;
+                RaiseCanExecuteChanged(); // لتحديث حالة الازرار فور البدء التنفيذ
                 await _execute(parameter);
             }
             finally
             {
                 _isExecuting = false;
-                CommandManager.InvalidateRequerySuggested();
+                RaiseCanExecuteChanged(); // لتحديث حالة الازرار فور الانتهاء التنفيذ
             }
         }
 

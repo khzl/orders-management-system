@@ -73,7 +73,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _searchText = value;
                 OnPropertyChanged(nameof(SearchText));
-                ApplyFilter();
             }
         }
 
@@ -83,8 +82,13 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             get => _isLoading;
             set
             {
+                if (_isLoading == value)
+                    return; // تاكد ان القيمة تغيرت لتجنب التحديثات الزائدة 
                 _isLoading = value;
                 OnPropertyChanged(nameof(IsLoading));
+
+                // تبليغ الأوامر أن حالة الـ CanExecute قد تغيرت
+                NotifyCommands();
             }
         }
 
@@ -99,6 +103,59 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
+        // Pagination Properties 
+        private int _currentPage = 1;
+        public int CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                if (value < 1)
+                    value = 1; // لا تسمح بأن تكون الصفحة اقل من 1
+
+                _currentPage = value;
+                OnPropertyChanged(nameof(CurrentPage));
+                // إجبار الازرار على تحديث حالتها (Enable/Disable) بعد تغيير الصفحة
+                NotifyCommands();
+            }
+        }
+
+        private int _totalPages = 1; // يبدأ من 1 بدل 0
+        public int TotalPages
+        {
+            get => _totalPages;
+            set
+            {
+                // لا تسمح بأن تكون الصفحات أفل من 1 حتى لو لم تكن هناك بيانات 
+                _totalPages = value < 1 ? 1 : value;
+                OnPropertyChanged(nameof(TotalPages));
+                // إجبار الازرار على تحديث حالتها (Enable/Disable) بعد تغيير الصفحة
+                NotifyCommands();
+            }
+        }
+
+        private int _pageSize = 10; // Number Of Items Per Page
+        public int PageSize
+        {
+            get => _pageSize;
+            set
+            {
+                _pageSize = value;
+                OnPropertyChanged(nameof(PageSize));
+            }
+        }
+
+        private int _totalCount;
+        public int TotalCount
+        {
+            get => _totalCount;
+            set
+            {
+                _totalCount = value;
+                OnPropertyChanged(nameof(TotalCount));
+            }
+        }
+
         // Selected Search Type property 
         // Property To Store Selected Search Type 
         private en_CustomerSearchType? _selectedSearchType = en_CustomerSearchType.All;
@@ -109,7 +166,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _selectedSearchType = value;
                 OnPropertyChanged(nameof(SelectedSearchType));
-                ApplyFilter(); // again Filter on Changed Type 
             }
         }
 
@@ -124,6 +180,10 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         public ICommand? DeleteCommand { get; } // Delete One (in Row)
         public ICommand? DeleteAllCommand { get; } // Delete All (in Top Button)
         public ICommand? EditCommand { get; }
+
+        // Command Pagination Pages
+        public ICommand? NextPageCommand { get; }
+        public ICommand? PrevPageCommand { get; }
 
 
         // Constructor 
@@ -148,7 +208,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             _onDeletedAll = _ => App.Current.Dispatcher.Invoke(() =>
             {
                 _allCustomers.Clear();
-                ApplyFilter();
             });
 
             _eventBus.Subscribe(_onCreated);
@@ -193,83 +252,84 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 }
             });
 
+            // Commands Pagination Pages 
+            // Command NextPageCommand With Check Condition
+            NextPageCommand = new AsyncRelayCommand
+            (
+                async _ =>
+            {
+                CurrentPage++;
+                await LoadData();
+            },
+                _ => CurrentPage < TotalPages && !IsLoading // لا يشتغل إذا كنت في آخر صفحة أو أثناء التحميل
+            );
+
+            // Command PrevPageCommand With Check Condition
+            PrevPageCommand = new AsyncRelayCommand
+            (
+                async _ =>
+            {
+                CurrentPage--;
+                await LoadData();
+            },
+                _ => CurrentPage > 1 && !IsLoading // لا يشتغل إذا كنت في أول صفحة او أثناء التحميل
+            );
+
         }
 
+        // NotifyCommands
+        private void NotifyCommands()
+        {
+            (NextPageCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            (PrevPageCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        }
 
         // LoadData
         private async Task LoadData()
         {
+            if (IsLoading)
+                return; // Guard against multiple concurrent loads
+
             ErrorMessage = null;
 
             try
             {
                 IsLoading = true;
-                var result = await _customerService.GetAllAsync();
+
+                // تحديث حالة الأزرار لتعطيلها أثناء التحميل
+                NotifyCommands();
+
+                var result =
+                    await _customerService.GetAllAsync(CurrentPage, PageSize);
 
                 if (result.IsSuccess)
                 {
-                    _allCustomers = result.Data?.ToList() ?? new();
-                    ApplyFilter();
+                    var pagedData = result.Data;
+
+                    _allCustomers = pagedData?.Data?.ToList() ?? new List<CustomerDto>();
+
+                    Customers.ReplaceRange(_allCustomers);
+
+                    int serverPages = pagedData?.TotalPages ?? 1;
+                    TotalPages = serverPages < 1 ? 1 : serverPages;
                 }
                 else
                 {
                     ErrorMessage = result.Error;
                 }
-                IsLoading = false;
-
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Error: {ex.Message}";
+            }
+            finally
+            {
                 IsLoading = false;
+
+                // إعادة تحديث حالة الأزرار بعد انتهاء التحميل
+                NotifyCommands();
             }
         }
-
-        // Logic Filters professional
-        private void ApplyFilter()
-        {
-            if (_allCustomers == null || !_allCustomers.Any())
-            {
-                Customers.ReplaceRange(new List<CustomerDto>());
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(SearchText))
-            {
-                // if search empty, show all data
-                Customers.ReplaceRange(_allCustomers);
-                return;
-            }
-
-            // keep the original search text and use a StringComparison for comparisons
-            string query = SearchText.Trim();
-
-            var filtered = _allCustomers.Where(c =>
-            {
-                return SelectedSearchType switch
-                {
-                    en_CustomerSearchType.Name => 
-                    c.CustomerName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
-
-                    en_CustomerSearchType.Email => 
-                    c.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false,
-
-                    // search safely inside list Phones
-                    en_CustomerSearchType.Phone =>
-                        c.Phones?.Any(p => p.PhoneNumber?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) 
-                        ?? false,
-
-                    // Default for Search All
-                    _ => (c.CustomerName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                         (c.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                         (c.Phones?.Any(p => p.PhoneNumber?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) 
-                         ?? false)
-                };
-            }).ToList();
-
-            Customers.ReplaceRange(filtered);
-        }
-
 
         // Navigation To Add CustomerView
         private Task GoToAddCustomer()

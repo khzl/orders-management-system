@@ -55,12 +55,18 @@
                              Command="{Binding ProductsCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
                              Style="{StaticResource SidebarMenuStyle}"
                              GroupName="Menu"/>
+                    <RadioButton Content="Reports"
+                                 Command="{Binding ReportsCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 Style="{StaticResource SidebarMenuStyle}"
+                                 GroupName="Menu"/>
                 </StackPanel>
             </ScrollViewer>
             
             <StackPanel Grid.Row="2" Margin="10,20">
                 <RadioButton Content="Settings"
-                             Style="{StaticResource SidebarMenuStyle}"/>
+                             Command="{Binding SettingsCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Style="{StaticResource SidebarMenuStyle}"
+                             GroupName="Menu"/>
                 <Separator Background="{StaticResource BorderBrush}" Margin="10,15"/>
                 <Button Style="{StaticResource OutlineButtonStyle}" Content="Logout"
                         Margin="20"/>

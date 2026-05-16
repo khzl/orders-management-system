@@ -12,5 +12,6 @@ namespace OrderManagementSystem.Dtos.Customers
         public string? Address { get; set; }
 
         public List<CustomerPhoneDto> CustomerPhones { get; set; } = new();
+        public List<int>? DeletedPhoneIds { get; set; } = new(); // List To Store Deleted Phones Ids To Delete It When Save
     }
 }
