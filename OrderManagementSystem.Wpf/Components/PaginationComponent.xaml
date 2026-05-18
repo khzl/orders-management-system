@@ -9,26 +9,69 @@
              Background="{StaticResource BackgroundBrush}">
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-        <Button Content="Previous"
+        <Button 
+                Content="&lt;"
                 Command="{Binding PrevCommand, ElementName=Root}"
-                Style="{StaticResource OutlineButtonStyle}" Width="100" Height="60"/>
+                Style="{StaticResource OutlineButtonStyle}" 
+                Width="60" Height="60"
+                FontSize="18" FontWeight="Bold"/>
 
-        <Border Background="{StaticResource PrimaryBrush}" CornerRadius="4"
-                Margin="15,0" Padding="12,5">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Page " Foreground="White"/>
-                <TextBlock Text="{Binding CurrentPage, ElementName=Root, FallbackValue=1}"
-                           FontWeight="Bold" Foreground="White"/>
-                <TextBlock Text=" Of " Foreground="White"/>
-                <TextBlock Text="{Binding TotalPages, ElementName=Root, FallbackValue=1}"
-                           FontWeight="Bold" Foreground="White"/>
-            </StackPanel>
-        </Border>
+        <ItemsControl ItemsSource="{Binding VisiblePages, ElementName=Root}"
+                      Margin="8,0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Content="{Binding DisplayText}"
+                            Command="{Binding SelectPageCommand, ElementName=Root}"
+                            CommandParameter="{Binding}"
+                            Width="60"
+                            Height="60"
+                            Margin="4,0"
+                            FontSize="16"
+                            FontWeight="SemiBold">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource PageNumberButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="Background" Value="#FF007ACC"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
 
-        <Button Content="Next"
-                Command="{Binding NextCommand , ElementName=Root}"
-                Style="{StaticResource OutlineButtonStyle}" Width="100" Height="60"/>
-        
+                                    <DataTrigger Binding="{Binding IsEllipsis}" Value="True">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Setter Property="Foreground" Value="Gray"/>
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="..."
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Center"
+                                                               FontSize="18"
+                                                               FontWeight="Bold"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Button 
+                Content="&gt;"
+                Command="{Binding NextCommand, ElementName=Root}"
+                Style="{StaticResource OutlineButtonStyle}" 
+                Width="60" Height="60"
+                FontSize="18" FontWeight="Bold"/>
+
     </StackPanel>
-    
 </UserControl>

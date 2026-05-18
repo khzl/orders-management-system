@@ -1,5 +1,7 @@
-﻿using System;
+﻿using OrderManagementSystem.Wpf.Commands;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
 using System.Windows;
@@ -19,23 +21,28 @@ namespace OrderManagementSystem.Wpf.Components
     /// </summary>
     public partial class PaginationComponent : UserControl
     {
-        // 1. CurrentPage
+        // Helper Class To Represent Each Page Number In UI
+        public class PageItem
+        {
+            public string? DisplayText { get; set; }
+            public int Number { get; set; }
+            public bool IsActive { get; set; }
+            public bool IsEllipsis { get; set; }
+        }
+
+        // Group Number will be Showed In UI , For Example: 1,2,3,4,5
+        public ObservableCollection<PageItem> VisiblePages { get; } = new(); // ReadOnly Collection To Bind With UI
+
+        // 1. خاصية الصفحة الحالية - تدعم الربط ثنائي الاتجاه افتراضياً لتبادل التحديثات
         public static readonly DependencyProperty CurrentPageProperty =
            DependencyProperty.Register(nameof(CurrentPage), typeof(int), typeof(PaginationComponent),
-           new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+           new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnPageDataChanged));
 
-        // 2. TotalPages
+        // 2. خاصية إجمالي الصفحات
         public static readonly DependencyProperty TotalPagesProperty =
            DependencyProperty.Register(nameof(TotalPages), typeof(int), typeof(PaginationComponent),
-           new PropertyMetadata(1));
+           new PropertyMetadata(1, OnPageDataChanged));
 
-        // 3. NextCommand
-        public static readonly DependencyProperty NextCommandProperty =
-            DependencyProperty.Register(nameof(NextCommand), typeof(ICommand), typeof(PaginationComponent));
-
-        // 4. PrevCommand
-        public static readonly DependencyProperty PrevCommandProperty =
-            DependencyProperty.Register(nameof(PrevCommand), typeof(ICommand), typeof(PaginationComponent));
 
         public int CurrentPage
         {
@@ -49,18 +56,172 @@ namespace OrderManagementSystem.Wpf.Components
             set => SetValue(TotalPagesProperty, value);
         }
 
-        public ICommand NextCommand
+        // Internal Commands to Binding in XAML
+        // ReadOnly Properties 
+        public ICommand? PrevCommand { get; }
+        public ICommand? NextCommand { get; }
+        public ICommand? SelectPageCommand { get; }
+
+        public PaginationComponent()
         {
-            get => (ICommand)GetValue(NextCommandProperty);
-            set => SetValue(NextCommandProperty, value);
+            // initialize Commands with Conditional Enables them
+            // 1. نجهز الأوامر أولاً في الذاكرة قبل أن تقرأها الواجهة
+            PrevCommand = new RelayCommand(_ => MovePrev(), _ => CurrentPage > 1);
+
+            NextCommand = new RelayCommand(_ => MoveNext(), _ => CurrentPage < TotalPages);
+
+            SelectPageCommand = new RelayCommand(parameter => ChoosePage(parameter));
+
+            // 2. الآن نقوم ببناء الواجهة والـ Binding ليلتقط الأوامر الجاهزة فوراً
+            InitializeComponent();
+
+            this.Loaded += (s,e) => UpdateVisiblePages(); // تحديث الأرقام عند إنشاء المكون
         }
 
-        public ICommand PrevCommand
+
+        // استدعاء التحديث فور تغير الصفحة الحالية أو الإجمالي
+        private static void OnPageDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            get => (ICommand)GetValue(PrevCommandProperty);
-            set => SetValue(PrevCommandProperty, value);
+            if (d is PaginationComponent control)
+            {
+                control.UpdateVisiblePages();
+                // إجبار WPF على إعادة فحص شروط التفعيل (CanExecute) للأزرار فوراً
+                CommandManager.InvalidateRequerySuggested();
+            }
         }
 
-        public PaginationComponent() => InitializeComponent();
+        // Logic Navigation Methods For Arrows Buttons
+        private void MovePrev() => CurrentPage--;
+
+        private void MoveNext() => CurrentPage++;
+
+        private void ChoosePage(object? parameter)
+        {
+            if (parameter is PageItem page && !page.IsEllipsis && page.Number != CurrentPage)
+            {
+                CurrentPage = page.Number;
+            }
+        }
+
+        // توليد الصفحات ديناميكيا بحسب موضع الصفحة الحالية
+        private void UpdateVisiblePages()
+        {
+            VisiblePages.Clear();
+
+            if (TotalPages <= 0)
+                return;
+
+            // الحالة الاولى : اذا كان الاجمالي الصفحات 5 صفحات او اقل تظهر الارقام متتالية طبيعيا 
+            if (TotalPages <= 5)
+            {
+                for (int index = 1; index <= TotalPages; index++)
+                {
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = index.ToString(),
+                        Number = index,
+                        IsActive = (index == CurrentPage),
+                        IsEllipsis = false
+                    });
+                }
+            }
+            // الحالة الثانية اذا كان اجمالي الصفحات اكبر من 5 (تطبيق لوجك النقاط المتقدم
+            else
+            {
+                if (CurrentPage <= 3)
+                {
+                    // الموضع في البداية : يعرض (1,2,3,4,5,...,الصفحة الاخيرة
+                    for (int index = 1; index <= 4; index++)
+                    {
+                        VisiblePages.Add(new PageItem
+                        {
+                            DisplayText = index.ToString(),
+                            Number = index,
+                            IsActive = (index == CurrentPage)
+                        });
+                    }
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "...",
+                        Number = 0,
+                        IsEllipsis = true
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = TotalPages.ToString(),
+                        Number = TotalPages
+                    });
+                }
+                else if (CurrentPage >= TotalPages - 2)
+                {
+                    // الموضع في النهاية: يعرض (1، ...، إجمالي-3، إجمالي-2، إجمالي-1، إجمالي)
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "1",
+                        Number = 1
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "...",
+                        Number = 0,
+                        IsEllipsis = true
+                    });
+                    for (int index = TotalPages - 3; index <= TotalPages; index++)
+                    {
+                        VisiblePages.Add(new PageItem
+                        {
+                            DisplayText = index.ToString(),
+                            Number = index,
+                            IsActive = (index == CurrentPage)
+                        });
+                    }
+                }
+                else
+                {
+                    // الموضع في المنتصف: يعرض (1، ...، الحالي-1، الحالي (نشط)، الحالي+1، ...، الصفحة الأخيرة)
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "1",
+                        Number = 1
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "...",
+                        Number = 0,
+                        IsEllipsis = true
+                    });
+
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = (CurrentPage - 1).ToString(),
+                        Number = CurrentPage - 1
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = CurrentPage.ToString(),
+                        Number = CurrentPage,
+                        IsActive = true
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = (CurrentPage + 1).ToString(),
+                        Number = CurrentPage + 1
+                    });
+
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = "...",
+                        Number = 0,
+                        IsEllipsis = true
+                    });
+                    VisiblePages.Add(new PageItem
+                    {
+                        DisplayText = TotalPages.ToString(),
+                        Number = TotalPages
+                    });
+                }
+            }
+        }
+
     }
 }

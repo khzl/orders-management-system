@@ -40,7 +40,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         // property List Collection For Customer list linked for DataGrid
         public RangeObservableCollection<CustomerDto> Customers { get; set; } = new();
 
-
+        // Properties Binding 
         private CustomerDto? _selectedCustomer;
 
         public CustomerDto? SelectedCustomer
@@ -86,9 +86,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                     return; // تاكد ان القيمة تغيرت لتجنب التحديثات الزائدة 
                 _isLoading = value;
                 OnPropertyChanged(nameof(IsLoading));
-
-                // تبليغ الأوامر أن حالة الـ CanExecute قد تغيرت
-                NotifyCommands();
             }
         }
 
@@ -110,27 +107,28 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             get => _currentPage;
             set
             {
-                if (value < 1)
-                    value = 1; // لا تسمح بأن تكون الصفحة اقل من 1
+                if (_currentPage == value || value < 1)
+                    return; // لا تسمح بأن تكون الصفحة اقل من 1
 
                 _currentPage = value;
                 OnPropertyChanged(nameof(CurrentPage));
-                // إجبار الازرار على تحديث حالتها (Enable/Disable) بعد تغيير الصفحة
-                NotifyCommands();
+                // جلب البيانات تلقائياً فور تغير الصفحة القادمة من الـ Component
+                _ = LoadData();
             }
         }
 
-        private int _totalPages = 1; // يبدأ من 1 بدل 0
+        private int _totalPages = 25; // لازم تنطيه مجموع الصفحات بعدد مناسب حتى يكدر يعرض 
         public int TotalPages
         {
             get => _totalPages;
             set
             {
                 // لا تسمح بأن تكون الصفحات أفل من 1 حتى لو لم تكن هناك بيانات 
-                _totalPages = value < 1 ? 1 : value;
-                OnPropertyChanged(nameof(TotalPages));
-                // إجبار الازرار على تحديث حالتها (Enable/Disable) بعد تغيير الصفحة
-                NotifyCommands();
+                if (_totalPages != value)
+                {
+                    _totalPages = value;
+                    OnPropertyChanged(nameof(TotalPages));
+                }
             }
         }
 
@@ -180,10 +178,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         public ICommand? DeleteCommand { get; } // Delete One (in Row)
         public ICommand? DeleteAllCommand { get; } // Delete All (in Top Button)
         public ICommand? EditCommand { get; }
-
-        // Command Pagination Pages
-        public ICommand? NextPageCommand { get; }
-        public ICommand? PrevPageCommand { get; }
 
 
         // Constructor 
@@ -251,38 +245,8 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                     await GoToUpdateCustomer(updateCustomerDto);
                 }
             });
-
-            // Commands Pagination Pages 
-            // Command NextPageCommand With Check Condition
-            NextPageCommand = new AsyncRelayCommand
-            (
-                async _ =>
-            {
-                CurrentPage++;
-                await LoadData();
-            },
-                _ => CurrentPage < TotalPages && !IsLoading // لا يشتغل إذا كنت في آخر صفحة أو أثناء التحميل
-            );
-
-            // Command PrevPageCommand With Check Condition
-            PrevPageCommand = new AsyncRelayCommand
-            (
-                async _ =>
-            {
-                CurrentPage--;
-                await LoadData();
-            },
-                _ => CurrentPage > 1 && !IsLoading // لا يشتغل إذا كنت في أول صفحة او أثناء التحميل
-            );
-
         }
 
-        // NotifyCommands
-        private void NotifyCommands()
-        {
-            (NextPageCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-            (PrevPageCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-        }
 
         // LoadData
         private async Task LoadData()
@@ -295,9 +259,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             try
             {
                 IsLoading = true;
-
-                // تحديث حالة الأزرار لتعطيلها أثناء التحميل
-                NotifyCommands();
 
                 var result =
                     await _customerService.GetAllAsync(CurrentPage, PageSize);
@@ -312,6 +273,9 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
                     int serverPages = pagedData?.TotalPages ?? 1;
                     TotalPages = serverPages < 1 ? 1 : serverPages;
+
+                    // تحديث العدد الإجمالي إذا كان قادماً من السيرفر
+                    TotalCount = pagedData?.TotalCount ?? _allCustomers.Count;
                 }
                 else
                 {
@@ -325,9 +289,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             finally
             {
                 IsLoading = false;
-
-                // إعادة تحديث حالة الأزرار بعد انتهاء التحميل
-                NotifyCommands();
             }
         }
 

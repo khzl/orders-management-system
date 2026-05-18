@@ -325,35 +325,18 @@
                                 </Border>
                             </DataTemplate>
                         </DataGrid.RowDetailsTemplate>
-
                     </DataGrid>
-
-                    <!--<StackPanel VerticalAlignment="Center"
-                            HorizontalAlignment="Center"
-                            Visibility="{Binding Customers.Count,
-                                         Converter={StaticResource ZeroToVisibilityConverter}}">
-                    <TextBlock Text="No Customers Found"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
-                </StackPanel>-->
-
-                    <!--<components:LoadingOverlayComponent Visibility="{Binding IsLoading,
-                                                     Converter={StaticResource BoolToVisibilityConverter}}"/>-->
-
                 </Grid>
             </Border>
 
             <Border Grid.Row="1"
                     Style="{StaticResource CardStyle}"
-                    Margin="0,15,0,0"
-                    Padding="10,5"
+                    Margin="0,10,0,0"
+                    Padding="2,2"
                     VerticalAlignment="Bottom">
                 <components:PaginationComponent
-                            CurrentPage="{Binding CurrentPage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            TotalPages="{Binding TotalPages , Mode=TwoWay}"
-                            NextCommand="{Binding NextPageCommand}"
-                            PrevCommand="{Binding PrevPageCommand}"/>
+                            CurrentPage="{Binding CurrentPage, Mode=TwoWay}"
+                            TotalPages="{Binding TotalPages}"/>
             </Border>
         </Grid>
     </Grid>
