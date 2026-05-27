@@ -100,6 +100,8 @@ namespace OrderManagementSystem.Wpf
             services.AddSingleton<CustomersViewModel>();
             services.AddTransient<AddCustomerViewModel>();
             services.AddTransient<UpdateCustomerViewModel>();
+            services.AddTransient<CustomerPhonesViewModel>();
+
 
             // Register Orders ViewModel Here 
             services.AddSingleton<OrdersViewModel>();

@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Windows.Input;
 using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
+using OrderManagementSystem.Dtos;
 
 namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
@@ -27,16 +28,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         private readonly List<int> _deletedPhoneIds = new(); // To Track Deleted Phones
 
         // Property Binding 
-        private int _customerId;
-        public int CustomerId
-        {
-            get => _customerId;
-            set
-            {
-                _customerId = value;
-                OnPropertyChanged(nameof(CustomerId));
-            }
-        }
+        public int CustomerId { get; set; } // Property Standard
         
         private string? _customerName;
         public string? CustomerName 
@@ -113,8 +105,9 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
         // Command To Operation Phones
         public ICommand? AddPhoneCommand { get; } // ReadOnly
-        public ICommand? DeletePhoneCommand { get; } // ReadOnly
-
+        public ICommand? RemovePhoneCommand { get; } // ReadOnly
+        public ICommand? UpdatePhoneCommand { get; } // ReadOnly
+        public ICommand? SetPrimaryCommand { get; } // ReadOnly
 
         // public Constructor Injection 
         public UpdateCustomerViewModel(
@@ -130,15 +123,43 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
             CancelCommand = new RelayCommand(_ => GoBack());
 
-            // method add phone empty for list to make user set 
-            // Because Operation Add Phone Local Not DB (DB Operation Just Delete)
             AddPhoneCommand = new RelayCommand(_ => AddPhone());
 
-            DeletePhoneCommand = new RelayCommand(obj =>
+            RemovePhoneCommand = new RelayCommand(obj =>
             {
                 if (obj is CustomerPhoneDto phone)
-                    DeletePhone(phone); // Local Delete Just Remove From List And Add Id To Deleted List To Delete It When Save 
+                {
+                    if (phone.PhoneId > 0)
+                        _deletedPhoneIds.Add(phone.PhoneId);
+
+                    CustomerPhones.Remove(phone);
+
+                    if (CustomerPhones.Any() && !CustomerPhones.Any(p => p.IsPrimary))
+                        CustomerPhones.First().IsPrimary = true;
+                }
             });
+
+            UpdatePhoneCommand = new AsyncRelayCommand(async obj =>
+            {
+                if (obj is CustomerPhoneDto phone)
+                {
+                    var result = await _customerService.UpdatePhoneAsync(phone);
+
+                    if (!result.IsSuccess) 
+                        ErrorMessage = result.Error;
+                }
+            });
+
+            SetPrimaryCommand = new RelayCommand(obj =>
+            {
+                if (obj is CustomerPhoneDto selected)
+                {
+                    foreach (var phone in CustomerPhones) 
+                        phone.IsPrimary = false;
+                    selected.IsPrimary = true;
+                }
+            });
+
         }
 
 
@@ -227,31 +248,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
             return Task.CompletedTask;
         }
-
-
-        // Delete Phone (DB) 
-        private Task DeletePhone(CustomerPhoneDto customerPhoneDto)
-        {
-            if (customerPhoneDto == null)
-                return Task.CompletedTask;
-
-            // If Phone Has Id -> Means Exist in DB -> Add To Deleted List To Delete It When Save 
-            if (customerPhoneDto.PhoneId > 0) 
-            {
-                _deletedPhoneIds.Add(customerPhoneDto.PhoneId);
-            }
-
-            CustomerPhones.Remove(customerPhoneDto);
-
-            // Ensure One Primary Just 
-            if (CustomerPhones.Any() && !CustomerPhones.Any(p => p.IsPrimary))
-            {
-                CustomerPhones.First().IsPrimary = true;
-            }
-
-            return Task.CompletedTask;
-        }
-
 
         // Cancel -> GoBack
         private void GoBack()

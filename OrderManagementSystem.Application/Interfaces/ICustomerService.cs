@@ -21,5 +21,7 @@ namespace OrderManagementSystem.Application.Interfaces
         // Phone Management
         public Task<Result<CustomerPhoneDto>> AddPhoneAsync(CustomerPhoneDto customerPhoneDto);
         public Task<Result> DeletePhoneAsync(int phoneId);
+        public Task<Result> UpdatePhoneAsync(CustomerPhoneDto phoneDto);
+        public Task<Result<IEnumerable<CustomerPhoneDto>>> GetPhonesByCustomerIdAsync(int customerId);
     }
 }

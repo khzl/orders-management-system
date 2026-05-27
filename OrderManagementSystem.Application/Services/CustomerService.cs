@@ -188,5 +188,49 @@ namespace OrderManagementSystem.Application.Services
             return Result.Success();
         }
 
+        // Update Phone 
+        public async Task<Result> UpdatePhoneAsync(CustomerPhoneDto phoneDto)
+        {
+            if (phoneDto.PhoneId <= 0)
+                return Result.Failure("Invalid phone");
+
+            var validation = Validations.ValidatePhone(phoneDto.PhoneNumber!);
+            if (!validation.IsSuccess)
+                return validation;
+
+            var phone = new CustomerPhoneDto
+            {
+                PhoneId = phoneDto.PhoneId,
+                PhoneNumber = phoneDto.PhoneNumber,
+                PhoneType = phoneDto.PhoneType,
+                IsPrimary = phoneDto.IsPrimary
+            };
+
+            await _customerRepo.UpdatePhoneAsync(CustomerPhoneMapper.ToEntity(phone));
+
+            return Result.Success();
+        }
+
+        // GetPhones By CustomerId 
+        public async Task<Result<IEnumerable<CustomerPhoneDto>>> GetPhonesByCustomerIdAsync(int customerId)
+        {
+            if (customerId <= 0)
+                return Result<IEnumerable<CustomerPhoneDto>>.Failure("Invalid Customer Id");
+
+            var phones = await _customerRepo.GetPhonesByCustomerIdAsync(customerId);
+
+            var dtos = phones.Select(p => new CustomerPhoneDto
+            {
+                PhoneId = p.PhoneId,
+                CustomerId = p.CustomerId,
+                PhoneNumber = p.PhoneNumber,
+                PhoneType = p.PhoneType,
+                IsPrimary = p.IsPrimary
+            }).ToList();
+
+            return Result<IEnumerable<CustomerPhoneDto>>.Success(dtos);
+        }
+
+
     }
 }

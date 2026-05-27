@@ -178,7 +178,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         public ICommand? DeleteCommand { get; } // Delete One (in Row)
         public ICommand? DeleteAllCommand { get; } // Delete All (in Top Button)
         public ICommand? EditCommand { get; }
-
+        public ICommand? NavigateToPhonesCommand { get; } // Go To PhonesView
 
         // Constructor 
         public CustomersViewModel(
@@ -245,6 +245,19 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                     await GoToUpdateCustomer(updateCustomerDto);
                 }
             });
+
+            NavigateToPhonesCommand = new AsyncRelayCommand(async obj =>
+            {
+                if (obj is CustomerDto customerDto)
+                {
+                    var customerPhoneDto = new CustomerPhoneDto
+                    {
+                        CustomerId = customerDto.CustomerId
+                    };
+                    await GoToCustomerPhones(customerPhoneDto);
+                }
+            });
+
         }
 
 
@@ -306,6 +319,12 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 return Task.CompletedTask;
 
             _navigationService.NavigateTo<UpdateCustomerViewModel>(updateCustomerDto);
+            return Task.CompletedTask;
+        }
+
+        private Task GoToCustomerPhones(CustomerPhoneDto customerPhoneDto)
+        {
+            _navigationService.NavigateTo<CustomerPhonesViewModel>(customerPhoneDto);
             return Task.CompletedTask;
         }
 

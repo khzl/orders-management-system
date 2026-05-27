@@ -23,5 +23,7 @@ namespace OrderManagementSystem.Infrastructure.Interfaces
         // Phone Management 
         public Task AddPhoneAsync(int customerId, string phone, string phoneType = "Mobile", bool isPrimary = false);
         public Task DeletePhoneAsync(int phoneId);
+        public Task UpdatePhoneAsync(Entity_CustomerPhones phone);
+        public Task<IEnumerable<Entity_CustomerPhones>> GetPhonesByCustomerIdAsync(int customerId);
     }
 }

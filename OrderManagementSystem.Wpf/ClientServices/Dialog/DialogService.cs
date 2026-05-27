@@ -7,43 +7,90 @@ using System.Windows;
 
 namespace OrderManagementSystem.Wpf.ClientService.Dialog
 {
+    /// <summary>
+    /// Shows custom WPF overlay dialogs by writing into <see cref="MainViewModel"/>.
+    /// A semaphore serialises concurrent calls so no two dialogs fight over the same slot.
+    /// </summary>
     public class DialogService : IDialogService
     {
-        // private field
         private readonly MainViewModel _mainViewModel;
 
-        // public Constructor (Constructor Injection)
+        /// <summary>
+        /// Ensures at most one dialog is open at a time.
+        /// If a second call arrives while a dialog is open, it waits in the queue.
+        /// </summary>
+        private readonly SemaphoreSlim _gate = new(initialCount: 1, maxCount: 1);
+
+        // ── Constructor ──────────────────────────────────────────────────────
         public DialogService(MainViewModel mainViewModel)
         {
-            _mainViewModel = mainViewModel; // Injection
+            _mainViewModel = mainViewModel
+                ?? throw new ArgumentNullException(nameof(mainViewModel));
         }
 
-        public async Task ShowMessage(string message, string title = "Info")
+        // ── Public API ───────────────────────────────────────────────────────
+
+        /// <inheritdoc/>
+        public Task ShowInfoAsync(string message, string title = "Info") =>
+            ShowDialogCoreAsync(message, title, isConfirmation: false);
+
+        /// <inheritdoc/>
+        public Task ShowErrorAsync(string message, string title = "Error") =>
+            ShowDialogCoreAsync(message, title, isConfirmation: false);
+
+        /// <inheritdoc/>
+        public Task<bool> ShowConfirmationAsync(string message, string title = "Confirm") =>
+            ShowDialogCoreAsync(message, title, isConfirmation: true);
+
+        // ── Core implementation ───────────────────────────────────────────────
+
+        /// <summary>
+        /// All public methods funnel through here.
+        /// Serialises calls, dispatches to the UI thread, and guarantees cleanup.
+        /// </summary>
+        private async Task<bool> ShowDialogCoreAsync(
+            string message,
+            string title,
+            bool isConfirmation)
         {
-            var dialogViewModel = new DialogViewModel(title, message, false);
+            // One dialog at a time — callers queue here if another is already open
+            await _gate.WaitAsync();
 
-            _mainViewModel.CurrentDialog = dialogViewModel;
-            _mainViewModel.IsDialogVisible = true;
+            try
+            {
+                // WPF controls must be touched on the UI thread.
+                // If a ViewModel called us after a ConfigureAwait(false), we re-marshal.
+                if (!System.Windows.Application.Current.Dispatcher.CheckAccess())
+                {
+                    return await await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+                        () => ShowDialogCoreAsync(message, title, isConfirmation));
+                }
 
-            await dialogViewModel.DialogTask; // Wait User Enter OK
+                var dialogViewModel = new DialogViewModel(
+                    title: title ?? string.Empty,
+                    message: message ?? string.Empty,
+                    isConfirmation);
 
-            _mainViewModel.IsDialogVisible = false;
-            _mainViewModel.CurrentDialog = null;
-        }
+                _mainViewModel.CurrentDialog = dialogViewModel;
+                _mainViewModel.IsDialogVisible = true;
 
-        public async Task<bool> ShowConfirmation(string message, string title = "Confirm")
-        {
-            var dialogViewModel = new DialogViewModel(title, message);
-
-            _mainViewModel.CurrentDialog = dialogViewModel;
-            _mainViewModel.IsDialogVisible = true;
-
-            var result = await dialogViewModel.DialogTask;
-
-            _mainViewModel.IsDialogVisible = false;
-            _mainViewModel.CurrentDialog = null;
-
-            return result; // return true or false 
+                try
+                {
+                    // Suspends here until the user presses OK / Yes / No
+                    return await dialogViewModel.DialogTask;
+                }
+                finally
+                {
+                    // Always runs — even when DialogTask faults or is cancelled —
+                    // so the overlay never gets permanently stuck on screen
+                    _mainViewModel.IsDialogVisible = false;
+                    _mainViewModel.CurrentDialog = null;
+                }
+            }
+            finally
+            {
+                _gate.Release();
+            }
         }
 
     }

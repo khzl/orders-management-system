@@ -11,5 +11,9 @@ namespace OrderManagementSystem.Wpf.Helper
 
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        protected void OnPropertyChanged() =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+
     }
 }

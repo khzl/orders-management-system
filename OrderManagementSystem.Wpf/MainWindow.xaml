@@ -31,7 +31,8 @@
             <views:DashboardComponent/>
         </DataTemplate>
 
-        <!-- linked Navigation To CustomerView And AddCustomerView And UpdateCustomerView -->
+        <!-- linked Navigation To CustomerView And AddCustomerView And UpdateCustomerView
+              And CustomerPhonesView -->
         <DataTemplate DataType="{x:Type customerViewModel:CustomersViewModel}">
             <customerViews:CustomersView/>
         </DataTemplate>
@@ -42,6 +43,10 @@
 
         <DataTemplate DataType="{x:Type customerViewModel:UpdateCustomerViewModel}">
             <customerViews:UpdateCustomerView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type customerViewModel:CustomerPhonesViewModel}">
+            <customerViews:CustomerPhonesView/>
         </DataTemplate>
         
         <!-- linked Navigation To OrdersView And AddOrdersView And UpdateOrdersView -->

@@ -1,58 +1,157 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <!-- ملف الخطوط و النصوص -->
-    <!-- Text And Header Styles --> 
-    
-    <!-- TextHeading 1 -->
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║  TYPOGRAPHY STYLES                                               ║
+    ║                                                                  ║
+    ║  Scale (size descending):                                        ║
+    ║    TextHeading1  28px Bold     — page titles                    ║
+    ║    TextHeading2  20px SemiBold — section titles                 ║
+    ║    TextHeading3  16px SemiBold — card / panel headings          ║
+    ║    TextBody      14px Regular  — primary reading text           ║
+    ║    TextMuted     13px Regular  — supporting / helper text       ║
+    ║    TextSmall     12px Regular  — metadata, timestamps           ║
+    ║    TextCaption   11px Medium   — labels, badges, table headers  ║
+    ║                                                                  ║
+    ║  Semantic:                                                       ║
+    ║    TextError   — validation messages                            ║
+    ║    TextSuccess — confirmation messages                          ║
+    ║                                                                  ║
+    ║  Form:                                                           ║
+    ║    InputLabelStyle  — label above an input field                ║
+    ║    FieldLabelStyle  — inline label beside a control             ║
+    ║    SectionHeaderStyle — group heading inside a form             ║
+    ╚══════════════════════════════════════════════════════════════════╝
+    -->
+
+
+
+    <!-- ════════════════════════════════════════════════════════════════
+         HEADINGS
+         TextRenderingMode=ClearType + SnapsToDevicePixels for sharp
+         display at large sizes.
+    ═══════════════════════════════════════════════════════════════════ -->
+
     <Style x:Key="TextHeading1" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="28"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="Margin" Value="0,0,0,15"/>
+        <Setter Property="FontSize"                      Value="28"/>
+        <Setter Property="FontWeight"                    Value="Bold"/>
+        <Setter Property="Foreground"                    Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Margin"                        Value="0,0,0,8"/>
+        <Setter Property="LineHeight"                    Value="36"/>
+        <Setter Property="SnapsToDevicePixels"           Value="True"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
     </Style>
-    
-    <!-- TextHeading 2 -->
+
     <Style x:Key="TextHeading2" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="20"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize"                      Value="20"/>
+        <Setter Property="FontWeight"                    Value="SemiBold"/>
+        <Setter Property="Foreground"                    Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="LineHeight"                    Value="28"/>
+        <Setter Property="SnapsToDevicePixels"           Value="True"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
     </Style>
-    
-    <!-- TextBody -->
+
+    <!-- NEW: fills the gap between Heading2 (20px) and Body (14px) -->
+    <Style x:Key="TextHeading3" TargetType="TextBlock">
+        <Setter Property="FontSize"                      Value="16"/>
+        <Setter Property="FontWeight"                    Value="SemiBold"/>
+        <Setter Property="Foreground"                    Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="LineHeight"                    Value="24"/>
+        <Setter Property="SnapsToDevicePixels"           Value="True"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+    </Style>
+
+
+    <!-- ════════════════════════════════════════════════════════════════
+         BODY / SUPPORTING TEXT
+    ═══════════════════════════════════════════════════════════════════ -->
+
     <Style x:Key="TextBody" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize"    Value="14"/>
+        <Setter Property="Foreground"  Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight"  Value="22"/>
     </Style>
-    
-    <!-- TextMuted -->
+
     <Style x:Key="TextMuted" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize"    Value="13"/>
+        <Setter Property="Foreground"  Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight"  Value="20"/>
     </Style>
-    
-    <!-- InputLabelStyles -->
+
+    <!-- NEW: metadata, timestamps, auxiliary information -->
+    <Style x:Key="TextSmall" TargetType="TextBlock">
+        <Setter Property="FontSize"   Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="LineHeight" Value="18"/>
+    </Style>
+
+    <!-- NEW: labels, pill badges, compact table column headers -->
+    <Style x:Key="TextCaption" TargetType="TextBlock">
+        <Setter Property="FontSize"        Value="11"/>
+        <Setter Property="FontWeight"      Value="Medium"/>
+        <Setter Property="Foreground"      Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="LineHeight"      Value="16"/>
+    </Style>
+
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEMANTIC TEXT
+         Use these for inline feedback messages, not for banners
+         (banners live in the View as styled Borders).
+    ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- NEW: inline validation error messages -->
+    <Style x:Key="TextError" TargetType="TextBlock">
+        <Setter Property="FontSize"    Value="13"/>
+        <Setter Property="Foreground"  Value="{DynamicResource DangerTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight"  Value="20"/>
+    </Style>
+
+    <!-- NEW: inline confirmation / success messages -->
+    <Style x:Key="TextSuccess" TargetType="TextBlock">
+        <Setter Property="FontSize"    Value="13"/>
+        <Setter Property="Foreground"  Value="{DynamicResource SuccessTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight"  Value="20"/>
+    </Style>
+
+
+    <!-- ════════════════════════════════════════════════════════════════
+         FORM LABELS
+         InputLabelStyle  — sits above the input field (block layout)
+         FieldLabelStyle  — sits beside the input (inline / grid layout)
+         They share the same base via BasedOn to stay in sync.
+         FIX: was TextPrimaryBrush; labels use secondary for visual
+         hierarchy — the input value is the primary focus, not its label.
+         FIX: hardcoded #4A4A4A / #0078D7 → DynamicResource tokens.
+    ═══════════════════════════════════════════════════════════════════ -->
+
     <Style x:Key="InputLabelStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="Margin" Value="0,0,0,5"/>
+        <Setter Property="FontSize"    Value="13"/>
+        <Setter Property="FontWeight"  Value="Medium"/>
+        <Setter Property="Foreground"  Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="Margin"      Value="0,0,0,6"/>
     </Style>
 
-    <!-- SectionHeaderStyle -->
-    <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="16"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#0078D7"/>
-        <Setter Property="Margin" Value="0,0,0,20"/>
-    </Style>
-
-    <!-- FieldLabelStyle -->
-    <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+    <!-- Alias for backward compatibility; adds inline-layout defaults -->
+    <Style x:Key="FieldLabelStyle" TargetType="TextBlock"
+           BasedOn="{StaticResource InputLabelStyle}">
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Foreground" Value="#4A4A4A"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Margin"            Value="0"/>
     </Style>
-    
+
+    <!-- FIX: was hardcoded #0078D7 → DynamicResource PrimaryBrush -->
+    <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="Margin" Value="0,0,0,20"/>
+        <Setter Property="LineHeight" Value="22"/>
+    </Style>
+
+
 </ResourceDictionary>

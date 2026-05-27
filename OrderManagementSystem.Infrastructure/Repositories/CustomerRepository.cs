@@ -332,5 +332,46 @@ namespace OrderManagementSystem.Infrastructure.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
+        /// <summary>
+        /// Update Phone
+        /// </summary>
+        /// <param name="phone"></param>
+        /// <returns></returns>
+        public async Task UpdatePhoneAsync(Entity_CustomerPhones phone)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+
+            await connection.ExecuteAsync(
+                "sp_UpdateCustomerPhone",
+                new
+                {
+                    phone.PhoneId,
+                    phone.PhoneNumber,
+                    phone.PhoneType,
+                    phone.IsPrimary
+                },
+                commandType: CommandType.StoredProcedure);
+        }
+
+        /// <summary>
+        /// Get Phones By Customer Id
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Entity_CustomerPhones>> GetPhonesByCustomerIdAsync(int customerId)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+
+            var phones = await connection.QueryAsync<Entity_CustomerPhones>(
+                "sp_GetPhonesByCustomerId",
+                new
+                {
+                    CustomerId = customerId
+                },
+                commandType: CommandType.StoredProcedure);
+
+            return phones;
+        }
+
     }
 }

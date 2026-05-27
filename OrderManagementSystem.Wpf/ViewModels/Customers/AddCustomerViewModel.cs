@@ -14,22 +14,33 @@ using OrderManagementSystem.Application.Commons;
 using OrderManagementSystem.Dtos.Customers;
 using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
 using OrderManagementSystem.Wpf.ClientServices.EvenService;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
     public class AddCustomerViewModel : BaseViewModel
     {
-        // private field 
+
+        // ---------------------- Validation Patterns ------------------------
+        private static readonly Regex EmailRegex = new(
+           @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+           RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex PhoneRegex = new(
+            @"^\+?[\d\s\-\(\)]{7,15}$",
+            RegexOptions.Compiled);
+
+        // ---------------------- Dependencies ------------------------------ 
         private readonly ICustomerService _customerService;
         private readonly INavigationService _navigationService;
         private readonly IEventBus _eventBus; // add Event After Save 
 
 
-        // List Phones
-        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; set; } = new();
+        // ---------------------- Collections --------------------------------
+        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; } = new(); // ReadOnly
 
 
-        // Property Binding
+        // ---------------------- Bound Properties ----------------------------
         private string? _customerName;
         public string? CustomerName 
         {
@@ -63,28 +74,6 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        private string? _phoneType;
-        public string? PhoneType
-        {
-            get => _phoneType;
-            set
-            {
-                _phoneType = value;
-                OnPropertyChanged(nameof(PhoneType));
-            }
-        }
-
-        private bool _isPrimary;
-        public bool IsPrimary
-        {
-            get => _isPrimary;
-            set
-            {
-                _isPrimary = value;
-                OnPropertyChanged(nameof(IsPrimary));
-            }
-        }
-
         private string? _errorMessage;
         public string? ErrorMessage
         {
@@ -107,13 +96,15 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        //Commands
+        //-------------------- Commands ------------------------
         public ICommand? SaveCommand { get; }
         public ICommand? CancelCommand { get; }
         public ICommand? AddPhoneCommand { get; }
         public ICommand? RemovePhoneCommand { get; }
+        public ICommand? SetPrimaryCommand { get; }
+        public ICommand? UpdatePhoneCommand { get; }
 
-        // Constructor 
+        // ------------------- Constructor --------------------------
         public AddCustomerViewModel(
             ICustomerService customerService,
             INavigationService navigationService,
@@ -123,54 +114,69 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             _navigationService = navigationService;
             _eventBus = eventBus;
 
-            // Add First field Phones Auto when Open Screen
-            // رقم واحد افتراضي عند الفتح
+            // Seed One Default Phone row so the form is never empty on open 
             CustomerPhones.Add(new CustomerPhoneDto
             {
                 PhoneType = "Mobile",
                 IsPrimary = true
             });
 
-            AddPhoneCommand = new RelayCommand(_ => 
-            {
+            AddPhoneCommand = new RelayCommand(_ =>
+
                 CustomerPhones.Add(new CustomerPhoneDto
                 {
                     PhoneType = "Mobile",
                     IsPrimary = false
-                });
-            });
+                }),
+                _ => !IsLoading);
 
-            RemovePhoneCommand = new RelayCommand(phoneObj =>
-            {
-                if (phoneObj is CustomerPhoneDto phone && CustomerPhones.Count > 1)
+            RemovePhoneCommand = new RelayCommand(
+                obj =>
                 {
+                    if (obj is not CustomerPhoneDto phone || CustomerPhones.Count <= 1)
+                        return;
+
+                    bool wasPrimary = phone.IsPrimary;
                     CustomerPhones.Remove(phone);
 
-                    // Ensure One Primary Always Exists
-                    if (!CustomerPhones.Any(p => p.IsPrimary))
-                        CustomerPhones.First().IsPrimary = true;
-                }
-            });
+                    // Promote first remaining entry when the primary was removed
+                    if (wasPrimary && CustomerPhones.Any())
+                        CustomerPhones[0].IsPrimary = true;
+                },
+                obj => obj is CustomerPhoneDto && CustomerPhones.Count > 1 && !IsLoading);
 
-            SaveCommand = new AsyncRelayCommand(_ => Save());
-            CancelCommand = new RelayCommand(_ => GoBack());
+
+            SetPrimaryCommand = new RelayCommand(
+                obj =>
+                {
+                    if (obj is not CustomerPhoneDto selected) 
+                        return;
+                    foreach (var p in CustomerPhones) 
+                        p.IsPrimary = false;
+                    selected.IsPrimary = true;
+                },
+                _ => !IsLoading);
+
+            UpdatePhoneCommand = new RelayCommand(
+                _ => ClearError(),
+                _ => !IsLoading);
+
+            SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => !IsLoading);
+            CancelCommand = new RelayCommand(_ => GoBack(), _ => !IsLoading);
         }
 
-        // Method For Save New Customer  
-        private async Task Save()
+        // --------------------- Save -----------------------------------
+        private async Task SaveAsync()
         {
             ErrorMessage = null;
             IsLoading = true;
 
             try
             {
-                if (!ValidateData())
+                if (!ValidateInputs())
                     return;
 
-                // Ensure Only One Primary 
-                var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary);
-                foreach (var phone in CustomerPhones)
-                    phone.IsPrimary = phone == primary;
+                EnsureSinglePrimary();
 
                 var createCustomerDto = new CreateCustomerDto
                 {
@@ -192,45 +198,77 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                     ErrorMessage = result.Error;
                 }
             }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An Unexpected Error Occurred: {ex.Message}";
+            }
             finally
             {
                 IsLoading = false;
             }
         }
 
-        // Method to Check Validation Logic
-        private bool ValidateData()
+        // -------------------- Validations -----------------------
+        private bool ValidateInputs()
         {
-            if (string.IsNullOrWhiteSpace(CustomerName) || CustomerName.Length < 3)
+            if (string.IsNullOrWhiteSpace(CustomerName) || CustomerName.Trim().Length < 3)
             {
-                ErrorMessage = "Customer Name Must Be At Least 3 Characters";
+                ErrorMessage = "Customer name must be at least 3 characters.";
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Email) && !EmailRegex.IsMatch(Email.Trim()))
+            {
+                ErrorMessage = "Please enter a valid email address.";
                 return false;
             }
 
             if (!CustomerPhones.Any())
             {
-                ErrorMessage = "At least one primary phone number is required.";
+                ErrorMessage = "At least one phone number is required.";
                 return false;
             }
 
-            // فحص كل الأرقام المضافة في القائمة
-            foreach (var p in CustomerPhones)
+            foreach (var phone in CustomerPhones)
             {
-                if (string.IsNullOrWhiteSpace(p.PhoneNumber))
+                if (string.IsNullOrWhiteSpace(phone.PhoneNumber))
                 {
-                    ErrorMessage = "Phone Number Is Required..";
+                    ErrorMessage = "All phone number fields must be filled in.";
                     return false;
                 }
+
+                if (!PhoneRegex.IsMatch(phone.PhoneNumber.Trim()))
+                {
+                    ErrorMessage = $"\"{phone.PhoneNumber}\" is not a valid phone number.";
+                    return false;
+                }
+            }
+
+            if (!CustomerPhones.Any(p => p.IsPrimary))
+            {
+                ErrorMessage = "Please mark one phone number as primary.";
+                return false;
             }
 
             return true;
         }
 
-        // Cancel -> GoBack To CustomersView
-        private void GoBack()
+
+        // -------------------- Helpers ---------------------------
+        private void EnsureSinglePrimary()
         {
-            _navigationService.NavigateTo<CustomersViewModel>();
+            var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary)
+                ?? CustomerPhones.First();
+
+            foreach (var phone in CustomerPhones)
+                phone.IsPrimary = phone == primary;
         }
 
+        private void ClearError() => ErrorMessage = null;
+
+        private void GoBack() => _navigationService.NavigateTo<CustomersViewModel>();
+
+        private static string? NullIfEmpty(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

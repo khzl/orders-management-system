@@ -6,9 +6,8 @@
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Views.Customers"
              xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
              xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
-             mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000"
-             Background="{StaticResource BackgroundBrush}">
+             mc:Ignorable="d" d:DesignWidth="1000"
+             Background="{StaticResource BackgroundBrush}" Height="737">
 
     <UserControl.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
@@ -25,161 +24,61 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button Command="{Binding CancelCommand}"
-                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
-                        Style="{StaticResource OutlineButtonStyle}"
-                        Content="←" FontSize="18" Padding="10,0" Margin="0,0,15,0"/>
-                        <TextBlock Text="Update Customer"
-                           Style="{StaticResource TextHeading1}"
-                           Margin="0,0,0,5"/>
+                    <StackPanel Orientation="Horizontal" 
+                                Margin="0,0,0,10">
+                        <Button Command="{Binding CancelCommand}" 
+                                IsEnabled="{Binding IsLoading, 
+                                Converter={StaticResource InverseBoolConverter}}" 
+                                Style="{StaticResource OutlineButtonStyle}" 
+                                Content="←" FontSize="18" 
+                                Padding="10,0" Margin="0,0,15,0"/>
+                        <TextBlock Text="Update Customer" 
+                                   Style="{StaticResource TextHeading1}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="Modify customer details and phone contacts information."
-                       Style="{StaticResource TextMuted}"/>
+                    <TextBlock Text="Modify customer details and phone contacts information." 
+                               Style="{StaticResource TextMuted}"/>
                 </StackPanel>
 
                 <Border Grid.Row="1" Style="{StaticResource CardStyle}" 
-                MaxWidth="1400" HorizontalAlignment="Stretch" Padding="30">
+                        MaxWidth="1400" HorizontalAlignment="Stretch" Padding="30">
                     <Grid>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <Border Background="#FEE2E2" CornerRadius="6" Margin="0,0,0,20" Padding="15,10"
-                                Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="⚠️" Margin="0,0,10,0"/>
-                                        <TextBlock Text="{Binding ErrorMessage}"
-                                           Foreground="#B91C1C"
-                                           FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </Border>
 
-                                <StackPanel Margin="0,0,0,20">
-                                    <TextBlock Text="Full Name" Style="{StaticResource TextBody}"
-                                       FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                    <TextBox Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBoxStyle}"
-                                     Padding="12,10" Tag="Enter Customer Full Name....."/>
-                                </StackPanel>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                                <StackPanel Margin="0,0,0,20">
-                                    <TextBlock Text="Email Address" Style="{StaticResource TextBody}" 
-                                       FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                    <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBoxStyle}"
-                                     Padding="12,10" Tag="example@domain.com"/>
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,25">
-                                    <TextBlock Text="Physical Address" Style="{StaticResource TextBody}" 
-                                       FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                    <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBoxStyle}"
-                                     Height="80" TextWrapping="Wrap" AcceptsReturn="True"
-                                     Padding="12,10" VerticalContentAlignment="Top"
-                                     Tag="Street, City, Country....."/>
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,25">
-                                    <Grid Margin="0,0,0,10">
-                                        <TextBlock Text="Phone Contacts" 
-                                           Style="{StaticResource TextHeading2}" 
-                                           FontSize="16" VerticalAlignment="Center"/>
-                                        <Button Content="+ Add Phone" 
-                                        Command="{Binding AddPhoneCommand}"
-                                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
-                                        HorizontalAlignment="Right" 
-                                        Style="{StaticResource OutlineButtonStyle}" 
-                                        Padding="10,5" FontSize="12"/>
-                                    </Grid>
-
-                                    <Border Background="#F8FAFC" CornerRadius="8" Padding="15" 
-                                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                        <ItemsControl ItemsSource="{Binding CustomerPhones}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Grid Margin="0,0,0,12">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="2*"/>
-                                                            <ColumnDefinition Width="1*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-
-                                                        <Border Grid.Column="0" Background="White" 
-                                                        CornerRadius="6" BorderThickness="1" 
-                                                        BorderBrush="{StaticResource BorderBrush}" 
-                                                        Margin="0,0,10,0">
-                                                            <Grid>
-                                                                <TextBlock Text="📞" HorizontalAlignment="Left" 
-                                                                   VerticalAlignment="Center" Margin="12,0,0,0" 
-                                                                   Foreground="{StaticResource TextSecondaryBrush}" 
-                                                                   Panel.ZIndex="1"/>
-                                                                <TextBox Text="{Binding PhoneNumber, 
-                                                                 UpdateSourceTrigger=PropertyChanged}" 
-                                                                 Tag="Enter phone number..."
-                                                                 Padding="35,10,10,10" VerticalContentAlignment="Center"
-                                                                 Style="{StaticResource ModernTextBoxStyle}"
-                                                                 Background="Transparent" BorderThickness="0"/>
-                                                            </Grid>
-                                                        </Border>
-
-                                                        <ComboBox Grid.Column="1" Width="110" Margin="0,0,10,0"
-                                                          SelectedValue="{Binding PhoneType}" SelectedValuePath="Content"
-                                                          VerticalContentAlignment="Center">
-                                                            <ComboBoxItem Content="Mobile"/>
-                                                            <ComboBoxItem Content="Work"/>
-                                                            <ComboBoxItem Content="Home"/>
-                                                        </ComboBox>
-
-                                                        <CheckBox Grid.Column="2" 
-                                                          IsChecked="{Binding IsPrimary, UpdateSourceTrigger=PropertyChanged}" 
-                                                          Content="Primary ⭐" 
-                                                          Style="{StaticResource ModernToggleSwitch}"
-                                                          VerticalAlignment="Center" Margin="0,0,15,0"/>
-
-                                                        <Button Grid.Column="3" 
-                                                        Command="{Binding DataContext.DeletePhoneCommand, 
-                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Background="#FEE2E2" BorderThickness="0" 
-                                                        Width="40" Height="40" Cursor="Hand">
-                                                            <TextBlock Text="🗑️" Foreground="#B91C1C" 
-                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                                        </Button>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Border>
-                                </StackPanel>
-
-                                <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,25"/>
-
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Button Grid.Column="0" Content="Cancel"
-                                    Command="{Binding CancelCommand}"
-                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
-                                    Style="{StaticResource OutlineButtonStyle}"
-                                    Margin="0,0,10,0" Height="45"/>
-
-                                    <Button Grid.Column="1" Content="Update Changes"
-                                    Command="{Binding SaveCommand}"
-                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
-                                    Style="{StaticResource SuccessButtonStyle}"
-                                    Height="45"/>
-                                </Grid>
-                            </StackPanel>
+                        <ScrollViewer Grid.Row="0" 
+                                      VerticalScrollBarVisibility="Auto">
+                            <components:CustomerFormComponent 
+                                Margin="11,0,0,30"
+                                                              CustomerName="{Binding CustomerName}"
+                                                              Email="{Binding Email}"
+                                                              Address="{Binding Address}"
+                                                              ErrorMessage="{Binding ErrorMessage}"
+                                                              IsLoading="{Binding IsLoading}"
+                                                              CustomerPhones="{Binding CustomerPhones}"
+                                                              AddPhoneCommand="{Binding AddPhoneCommand}"
+                                                              RemovePhoneCommand="{Binding RemovePhoneCommand}"
+                                                              UpdatePhoneCommand="{Binding UpdatePhoneCommand}"
+                                                              SetPrimaryCommand="{Binding SetPrimaryCommand}"/>
                         </ScrollViewer>
 
-                        <!--<components:LoadingOverlayComponent 
-                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
-                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>-->
+                        <Grid Grid.Row="1" Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
+                            <Button Grid.Column="0" Content="Cancel" 
+                                    Command="{Binding CancelCommand}" 
+                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" 
+                                    Style="{StaticResource OutlineButtonStyle}" Margin="0,0,10,0" Height="45"/>
+                            <Button Grid.Column="1" Content="Update Changes" Command="{Binding SaveCommand}" 
+                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" 
+                                    Style="{StaticResource SuccessButtonStyle}" Height="45"/>
+                        </Grid>
                     </Grid>
                 </Border>
             </Grid>
