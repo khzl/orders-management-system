@@ -1,6 +1,8 @@
 ﻿using OrderManagementSystem.Application.Interfaces;
 using OrderManagementSystem.Domain.Entities;
+using OrderManagementSystem.Dtos;
 using OrderManagementSystem.Dtos.Customers;
+using OrderManagementSystem.Wpf.ClientService.Dialog;
 using OrderManagementSystem.Wpf.ClientService.Navigation;
 using OrderManagementSystem.Wpf.ClientServices.EvenService;
 using OrderManagementSystem.Wpf.ClientServices.Navigation;
@@ -11,24 +13,35 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using static OrderManagementSystem.Wpf.Helper.Event.CustomerEvents;
-using OrderManagementSystem.Dtos;
 
 namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
     public class UpdateCustomerViewModel : BaseViewModel
     {
-        // Request Data Customer 
-        
-        // private field 
+        // --------- Validations ------------------------------
+        private static readonly Regex EmailRegex = new(
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex PhoneRegex = new(
+            @"^\+?[\d\s\-\(\)]{7,15}$",
+            RegexOptions.Compiled);
+
+
+        // -------------- Dependencies --------------------------------------------- 
         private readonly ICustomerService _customerService;
         private readonly INavigationService _navigationService;
         private readonly IEventBus _eventBus;
+        private readonly IDialogService _dialogService;
+
+        // Tracks phoneIds that were removed locally - sent to the server on Save
         private readonly List<int> _deletedPhoneIds = new(); // To Track Deleted Phones
 
-        // Property Binding 
-        public int CustomerId { get; set; } // Property Standard
+        // ----------------- Bound Properties ---------------------------------------
+        public int CustomerId { get; private set; } // Property Standard
         
         private string? _customerName;
         public string? CustomerName 
@@ -38,6 +51,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _customerName = value;
                 OnPropertyChanged(nameof(CustomerName));
+                ClearError();
             }
         }
 
@@ -49,6 +63,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _email = value;
                 OnPropertyChanged(nameof(Email));
+                ClearError();
             } 
         }
 
@@ -60,6 +75,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _address = value;
                 OnPropertyChanged(nameof(Address));
+                ClearError();
             }
         }
 
@@ -82,24 +98,14 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _isLoading = value;
                 OnPropertyChanged(nameof(IsLoading));
-            }
-        }
-
-        private bool _isPrimary;
-        public bool IsPrimary
-        {
-            get => _isPrimary;
-            set
-            {
-                _isPrimary = value;
-                OnPropertyChanged(nameof(IsPrimary));
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
         // Property To Show Phones in Screen (list will be Show Items Control) 
-        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; set; } = new();
+        public ObservableCollection<CustomerPhoneDto> CustomerPhones { get; } = new();
 
-        // Commands 
+        // ---------------- Commands ----------------------------------------------------
         public ICommand? SaveCommand { get; } // ReadOnly 
         public ICommand? CancelCommand { get; } // ReadOnly
 
@@ -109,114 +115,119 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
         public ICommand? UpdatePhoneCommand { get; } // ReadOnly
         public ICommand? SetPrimaryCommand { get; } // ReadOnly
 
-        // public Constructor Injection 
+        // ------------------ Constructor ------------------------------------------------
         public UpdateCustomerViewModel(
             ICustomerService customerService,
             INavigationService navigationService,
-            IEventBus eventBus)
+            IEventBus eventBus,
+            IDialogService dialogService)
         {
             _customerService = customerService;
             _navigationService = navigationService;
             _eventBus = eventBus;
+            _dialogService = dialogService;
 
-            SaveCommand = new AsyncRelayCommand(_ => Save());
 
-            CancelCommand = new RelayCommand(_ => GoBack());
+            SaveCommand = new AsyncRelayCommand(
+                _ => SaveAsync(),
+                _ => !IsLoading);
 
-            AddPhoneCommand = new RelayCommand(_ => AddPhone());
+            CancelCommand = new RelayCommand(
+                _ => GoBack(),
+                _ => !IsLoading);
 
-            RemovePhoneCommand = new RelayCommand(obj =>
+            AddPhoneCommand = new RelayCommand(
+                _ => AddPhoneLocal(),
+                _ => !IsLoading);
+
+            RemovePhoneCommand = new AsyncRelayCommand(
+                async obj =>
             {
-                if (obj is CustomerPhoneDto phone)
+                if (obj is not CustomerPhoneDto phone)
+                    return;
+
+                // Confirm before staging a delete for an already-persisted phone
+                if (phone.PhoneId > 0)
                 {
-                    if (phone.PhoneId > 0)
-                        _deletedPhoneIds.Add(phone.PhoneId);
+                    bool confirmed = await _dialogService.ShowConfirmationAsync(
+                        $"Remove \"{phone.PhoneNumber}\"? It Will Be Deleted When You Save.",
+                        "Remove Phone");
 
-                    CustomerPhones.Remove(phone);
+                    if (!confirmed)
+                        return;
 
-                    if (CustomerPhones.Any() && !CustomerPhones.Any(p => p.IsPrimary))
-                        CustomerPhones.First().IsPrimary = true;
+                    _deletedPhoneIds.Add(phone.PhoneId);
                 }
-            });
 
-            UpdatePhoneCommand = new AsyncRelayCommand(async obj =>
+                CustomerPhones.Remove(phone);
+                EnsureSinglePrimary();
+            },
+                _ => !IsLoading);
+
+            UpdatePhoneCommand = new RelayCommand(
+                _ => ClearError(),
+                _ => !IsLoading);
+
+            SetPrimaryCommand = new RelayCommand(
+                obj =>
             {
-                if (obj is CustomerPhoneDto phone)
-                {
-                    var result = await _customerService.UpdatePhoneAsync(phone);
-
-                    if (!result.IsSuccess) 
-                        ErrorMessage = result.Error;
-                }
-            });
-
-            SetPrimaryCommand = new RelayCommand(obj =>
-            {
-                if (obj is CustomerPhoneDto selected)
-                {
-                    foreach (var phone in CustomerPhones) 
-                        phone.IsPrimary = false;
-                    selected.IsPrimary = true;
-                }
-            });
-
+                if (obj is not CustomerPhoneDto selected)
+                    return;
+                foreach (var p in CustomerPhones)
+                    p.IsPrimary = false;
+                selected.IsPrimary = true;
+            },
+                _ => !IsLoading);
         }
 
 
-        // method call NavigationService to passing Data 
+        // ----------------- Initialization ---------------------------------------------
         public void Load(object parameter)
         {
-            if (parameter is not CustomerDto customerDto)
+            if (parameter is not UpdateCustomerDto dto)
                 return;
 
-            CustomerId = customerDto.CustomerId;
-            CustomerName = customerDto.CustomerName;
-            Email = customerDto.Email;
-            Address = customerDto.Address;
-            
+            CustomerId = dto.CustomerId;
+            CustomerName = dto.CustomerName;
+            Email = dto.Email;
+            Address = dto.Address;
+
+            _deletedPhoneIds.Clear();
             CustomerPhones.Clear();
-            if (customerDto.Phones != null)
+
+            if (dto.CustomerPhones != null)
             {
-                foreach (var phone in customerDto.Phones)
+                foreach (var phone in dto.CustomerPhones)
                     CustomerPhones.Add(phone);
             }
         }
 
-        // Here Save Customer Only Just 
-        private async Task Save()
+        // ------------------- Save ---------------------------------------
+        private async Task SaveAsync()
         {
             ErrorMessage = null;
 
-            if (string.IsNullOrWhiteSpace(CustomerName) || CustomerName.Length < 3)
-            {
-                ErrorMessage = "Customer Name Must Be At 3 Characters.";
+            if (!ValidateInputs())
                 return;
-            }
+
+            IsLoading = true;
 
             try
             {
-                IsLoading = true;
 
-                var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary);
+                EnsureSinglePrimary();
 
-                foreach (var phone in CustomerPhones)
-                    phone.IsPrimary = phone == primary;
-
-                var updateCustomerDto = new UpdateCustomerDto
+                var dto = new UpdateCustomerDto
                 {
                     CustomerId = CustomerId,
-                    CustomerName = CustomerName,
-                    Email = Email,
-                    Address = Address,
-
-                    // Current Available On Screen
+                    CustomerName = CustomerName!.Trim(),
+                    Email = NullIfEmpty(Email),
+                    Address = NullIfEmpty(Address),
                     CustomerPhones = CustomerPhones.ToList(),
-
-                    // Deleted Phones Ids To Delete It When Save 
                     DeletedPhoneIds = _deletedPhoneIds
                 };
 
-                var result = await _customerService.UpdateAsync(updateCustomerDto);
+                var result = await _customerService.UpdateAsync(dto);
 
                 if (result.IsSuccess)
                 {
@@ -229,31 +240,93 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                     ErrorMessage = result.Error;
                 }
             }
+            catch(Exception ex)
+            {
+                ErrorMessage = $"An Unexpected Error Occurred: {ex.Message}";
+            }
             finally
             {
                 IsLoading = false;
             }
         }
 
-        // Add Phone (Local)
-        private Task AddPhone()
+        // ---------------------- Validations --------------------------------------
+        private bool ValidateInputs()
+        {
+            if (string.IsNullOrWhiteSpace(CustomerName) || CustomerName.Trim().Length < 3)
+            {
+                ErrorMessage = "Customer Name Must Be At Least 3 Characters...";
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Email) && !EmailRegex.IsMatch(Email.Trim()))
+            {
+                ErrorMessage = "Please Enter a Valid Email Address..";
+                return false;
+            }
+
+            if (!CustomerPhones.Any())
+            {
+                ErrorMessage = "At Least One Phone Number Is Required....";
+                return false;
+            }
+
+            foreach (var phone in CustomerPhones)
+            {
+                if (string.IsNullOrWhiteSpace(phone.PhoneNumber))
+                {
+                    ErrorMessage = "All Phone Number Fields Must Be Filled In...";
+                    return false;
+                }
+
+                if (!PhoneRegex.IsMatch(phone.PhoneNumber.Trim()))
+                {
+                    ErrorMessage = $"\"{phone.PhoneNumber}\" is not a valid phone number ...";
+                    return false;
+                }
+            }
+
+            if (!CustomerPhones.Any(p => p.IsPrimary))
+            {
+                ErrorMessage = "Please Mark One Phone Number As Primary..";
+                return false;
+            }
+
+            return true;
+        }
+
+        // ----------------- Local Phone Operations ----------------------------------------
+        private void AddPhoneLocal()
         {
             CustomerPhones.Add(new CustomerPhoneDto
             {
                 CustomerId = CustomerId,
-                PhoneNumber = "",
+                PhoneNumber = string.Empty,
                 PhoneType = "Mobile",
-                IsPrimary = false
+                IsPrimary = !CustomerPhones.Any() // auto-primary if first
             });
-
-            return Task.CompletedTask;
         }
 
-        // Cancel -> GoBack
-        private void GoBack()
+        // ------------------- Helpers -----------------------------------------------------
+        private void EnsureSinglePrimary()
         {
-            _navigationService.NavigateTo<CustomersViewModel>();
+            if (!CustomerPhones.Any())
+                return;
+
+            var primary = CustomerPhones.FirstOrDefault(p => p.IsPrimary)
+                ?? CustomerPhones.First();
+
+            foreach (var phone in CustomerPhones)
+                phone.IsPrimary = phone == primary;
         }
+
+        private void ClearError() => ErrorMessage = null;
+
+        private void GoBack() => _navigationService.NavigateTo<CustomersViewModel>();
+
+        private static string? NullIfEmpty(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     }
+
 }

@@ -27,7 +27,11 @@ namespace OrderManagementSystem.Infrastructure.Repositories
         ///  Get All Customer With Primary Phones Only
         /// </summary>
         /// <returns></returns>
-        public async Task<PaginationResult<Entity_Customer>> GetAllAsync(int pageNumber,int pageSize)
+        public async Task<PaginationResult<Entity_Customer>> GetAllAsync(
+            int pageNumber,
+            int pageSize,
+            en_CustomerSearchType? searchType,
+            string? searchText)
         {
             using var connection = _connectionFactory.CreateConnection();
 
@@ -37,7 +41,9 @@ namespace OrderManagementSystem.Infrastructure.Repositories
                 new
                 {
                     PageNumber = pageNumber,
-                    PageSize = pageSize
+                    PageSize = pageSize,
+                    SearchType = searchType?.ToString(),
+                    SearchText = searchText
                 },
                 commandType: CommandType.StoredProcedure);
 

@@ -7,13 +7,14 @@
 
     <Style TargetType="ComboBox">
         <Setter Property="Height"           Value="40"/>
-        <Setter Property="Background"       Value="White"/>
-        <Setter Property="BorderBrush"      Value="#E2E8F0"/>
+        <Setter Property="Background"       Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush"      Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness"  Value="1.5"/>
-        <Setter Property="Foreground"       Value="#1E293B"/>
+        <Setter Property="Foreground"       Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="FontSize"         Value="13"/>
         <Setter Property="Padding"          Value="12,0"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -60,7 +61,7 @@
                             <!-- Arrow SVG -->
                             <Path Grid.Column="1"
                                Data="M2,2 L8,8 L14,2"
-                               Stroke="#94A3B8"
+                               Stroke="{DynamicResource TextMutedBrush}"
                                StrokeThickness="1.8"
                                StrokeLineJoin="Round"
                                StrokeStartLineCap="Round"
@@ -78,15 +79,15 @@
                             AllowsTransparency="True"
                             Focusable="False"
                             PopupAnimation="Fade">
-                            <Border Background="White"
-                                 BorderBrush="#E2E8F0"
+                            <Border Background="{DynamicResource SurfaceBrush}"
+                                 BorderBrush="{DynamicResource BorderBrush}"
                                  BorderThickness="1.5"
                                  CornerRadius="8"
                                  MinWidth="{TemplateBinding ActualWidth}"
                                  MaxHeight="280"
                                  Margin="0,4,0,0">
                                 <Border.Effect>
-                                    <DropShadowEffect Color="#1E293B" Opacity="0.08"
+                                    <DropShadowEffect Color="Black" Opacity="0.08"
                                                    BlurRadius="16" ShadowDepth="4"
                                                    Direction="270"/>
                                 </Border.Effect>
@@ -99,27 +100,44 @@
 
                     <!-- Hover + Focus triggers -->
                     <ControlTemplate.Triggers>
+                        
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="MainBorder" Property="BorderBrush" Value="#93C5FD"/>
+                            <Setter TargetName="MainBorder" Property="BorderBrush" 
+                                    Value="{DynamicResource TextMutedBrush}"/>
                         </Trigger>
+                        
                         <Trigger Property="IsDropDownOpen" Value="True">
-                            <Setter TargetName="MainBorder" Property="BorderBrush" Value="#3B82F6"/>
+                            <Setter TargetName="MainBorder" Property="BorderBrush" 
+                                    Value="{DynamicResource BorderFocusBrush}"/>
                             <Setter TargetName="MainBorder" Property="BorderThickness" Value="2"/>
                         </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="MainBorder" Property="Background"
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
+                            <Setter TargetName="MainBorder" Property="BorderBrush"
+                                    Value="{DynamicResource TextDisabledBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextMutedBrush}"/>
+                        </Trigger>
+                        
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-
+    
+    
     <!-- ComboBoxItem -->
     <Style TargetType="ComboBoxItem">
-        <Setter Property="Padding"          Value="12,9"/>
-        <Setter Property="FontSize"         Value="13"/>
-        <Setter Property="Foreground"       Value="#1E293B"/>
-        <Setter Property="Background"       Value="Transparent"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Padding"             Value="12,9"/>
+        <Setter Property="FontSize"            Value="13"/>
+        <Setter Property="Foreground"          Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Background"          Value="Transparent"/>
+        <Setter Property="Cursor"              Value="Hand"/>
+        <Setter Property="FocusVisualStyle"    Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
@@ -132,11 +150,13 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="ItemBorder" Property="Background" Value="#EFF6FF"/>
+                            <Setter TargetName="ItemBorder" Property="Background"
+                                    Value="{DynamicResource PrimaryLightBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="ItemBorder" Property="Background" Value="#DBEAFE"/>
-                            <Setter Property="Foreground" Value="#1D4ED8"/>
+                            <Setter TargetName="ItemBorder" Property="Background"
+                                    Value="{DynamicResource PrimaryLightBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

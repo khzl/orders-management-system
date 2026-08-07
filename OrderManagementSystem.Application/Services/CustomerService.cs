@@ -25,10 +25,14 @@ namespace OrderManagementSystem.Application.Services
         }
 
         // Get All Customer 
-        public async Task<Result<PaginationResult<CustomerDto>>> GetAllAsync(int pageNumber,int pageSize)
+        public async Task<Result<PaginationResult<CustomerDto>>> GetAllAsync(
+            int pageNumber,
+            int pageSize,
+            en_CustomerSearchType? searchType,
+            string? searchText)
         {
-            var result = 
-                await _customerRepo.GetAllAsync(pageNumber,pageSize);
+            var result =
+                await _customerRepo.GetAllAsync(pageNumber, pageSize, searchType, searchText);
 
             var dtos = 
                 result.Data.Select(CustomerMapper.ToDto).ToList();

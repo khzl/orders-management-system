@@ -5,113 +5,142 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Components"
              xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
+             xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="720" d:DesignWidth="1000"
-             Background="{StaticResource BackgroundBrush}">
+             Background="{DynamicResource BackgroundBrush}">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-        <StackPanel Margin="10">
-            
-            <StackPanel Margin="0,0,0,25">
-                <TextBlock Text="Dashboard Overview"
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:NumericToVisibilityConverter x:Key="NumericToVisibilityConverter"/>
+        <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+    </UserControl.Resources>
+
+    <!--
+        Root Grid — two layers:
+          [0] Scrollable dashboard content
+          [1] Loading overlay (Panel.ZIndex=100)
+    -->
+    <Grid>
+        <!-- Layer 0 - scrollable content -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel Margin="10">
+
+                <!-- Page Header -->
+                <StackPanel Margin="0,0,0,25">
+                    <TextBlock Text="Dashboard Overview"
                            Style="{StaticResource TextHeading1}"
-                           Margin="0,0,0,5"/>
-                <TextBlock Text="Manage and Monitor Your Shop`s Performance in Real-Time...."
+                           Margin="0,0,0,4"/>
+                    <TextBlock Text="Manage and Monitor Your Shop`s Performance in Real-Time...."
                            Style="{StaticResource TextMuted}"/>
-            </StackPanel>
+                </StackPanel>
 
-            <UniformGrid Columns="4" Margin="0,0,0,30">
-                <components:CardComponent 
+                <!-- Summary State Card -->
+                <UniformGrid Columns="4" Margin="0,0,0,28">
+                    
+                    <components:CardComponent 
                     Title="Total Revenue"
-                    Value="12,840$"
+                    Value="{Binding TotalRevenue}"
                     Icon="💲"
-                    Trend="+5.4%"
-                    TrendBrush="Green"
-                    Description="Best Revenue"
-                    Margin="10"/>
-                <components:CardComponent 
-                    Title="Canceled Orders" 
-                    Value="23"
+                    Trend="{Binding TotalRevenueTrend}"
+                    TrendBrush="{StaticResource SuccessBrush}"
+                    Description="vs. last month"
+                    Margin="0,0,10,0"/>
+                    
+                    <components:CardComponent 
+                    Title="Cancelled Orders" 
+                    Value="{Binding CancelledOrders}"
                     Icon="🚫"
-                    Trend="-2.1%"
-                    TrendBrush="Red"
-                    Description="Improvement"
-                    Margin="10"/>
-                <components:CardComponent 
+                    Trend="{Binding CancelledOrdersTrend}"
+                    TrendBrush="{StaticResource DangerBrush}"
+                    Description="Needs attention"
+                    Margin="10,0"/>
+                    
+                    <components:CardComponent 
                     Title="Active Customers" 
-                    Value="1,456"
+                    Value="{Binding ActiveCustomers}"
                     Icon="👥"
-                    Trend="+5.4%"
-                    TrendBrush="Green"
-                    Description="Than Yesterday"
-                    Margin="10"/>
-                <components:CardComponent 
+                    Trend="{Binding ActiveCustomersTrend}"
+                    TrendBrush="{StaticResource SuccessBrush}"
+                    Description="vs. yesterday"
+                    Margin="10,0"/>
+                    
+                    <components:CardComponent 
                     Title="Pending Shipments"
-                    Value="7"
-                    Icon="🚨"
-                    Trend="+5.7%"
-                    TrendBrush="Green"
-                    Description="Pending Orders"
-                    Margin="10"/>
-            </UniformGrid>
+                    Value="{Binding PendingShipments}"
+                    Icon="📦"
+                    Trend="{Binding PendingShipmentsTrend}"
+                    TrendBrush="{StaticResource WarningBrush}"
+                    Description="Awaiting dispatch"
+                    Margin="10,0,0,0"/>
+                    
+                </UniformGrid>
 
-            <Border Style="{StaticResource CardStyle}" Padding="0">
-                <StackPanel>
-                    <Grid>
-                        <TextBlock Text="Recent Orders"
+                <!-- Recent Orders Card -->
+                <Border Style="{DynamicResource CardStyle}" Padding="0">
+                    <StackPanel>
+                        <!-- Card header -->
+                        <Grid Margin="20,16">
+                            
+                            <TextBlock Text="Recent Orders"
                                    Style="{StaticResource TextHeading2}"
                                    VerticalAlignment="Center"/>
-                        <Button Content="View All Orders"
-                                Style="{StaticResource OutlineButtonStyle}"
-                                HorizontalAlignment="Right"
-                                Padding="15,5"/>
-                    </Grid>
 
-                    <Separator Background="{StaticResource BorderBrush}"/>
+                            <Button Content="View All Orders →"
+                                    Command="{Binding ViewAllOrdersCommand}"
+                                    Style="{DynamicResource OutlineButtonStyle}"
+                                    HorizontalAlignment="Right"
+                                    Height="36"
+                                    Padding="16,0"/>
+                        </Grid>
 
-                    <DataGrid Style="{StaticResource ModernDataGridStyle}"
+                        <Separator Background="{StaticResource BorderBrush}"/>
+
+                        <DataGrid Style="{StaticResource ModernDataGridStyle}"
                               ItemsSource="{Binding RecentOrders}"
                               HorizontalAlignment="Stretch"
                               Margin="0"
                               MaxHeight="400">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="100"/>
-                            <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="150"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding OrderDate}" Width="150"/>
-                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount}" Width="120"/>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="100"/>
+                                <DataGridTextColumn Header="Customer Name" Binding="{Binding CustomerName}" Width="150"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding OrderDate}" Width="150"/>
+                                <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount}" Width="120"/>
 
-                            <DataGridTemplateColumn Header="Status" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#DCFCE7" CornerRadius="12"
+                                <DataGridTemplateColumn Header="Status" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#DCFCE7" CornerRadius="12"
                                                 Padding="8,4"
                                                 HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Status}"
+                                                <TextBlock Text="{Binding Status}"
                                                        Foreground="#166534"
                                                        FontSize="11" FontWeight="Bold"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="Action" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Details"
+                                <DataGridTemplateColumn Header="Action" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Details"
                                                 Cursor="Hand"
                                                 Background="Transparent"
                                                 BorderThickness="0"
                                                 Foreground="{StaticResource PrimaryBrush}"
                                                 FontWeight="SemiBold"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-            </Border>
-            
-            
-        </StackPanel>
-    </ScrollViewer>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

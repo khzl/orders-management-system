@@ -11,17 +11,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace OrderManagementSystem.Wpf.Views
+namespace OrderManagementSystem.Wpf.Views.Orders
 {
     /// <summary>
-    /// Interaction logic for SettingsView.xaml
-    /// Code - Behind For SettingsView.xaml
-    /// All Logic Lives in SettingsViewModel.cs (MVVM Pattern) - this file intentionally
-    ///  contains only InitializeComponent()
+    /// Interaction logic for AddOrderView.xaml
     /// </summary>
-    public partial class SettingsView : UserControl
+    public partial class AddOrderView : UserControl
     {
-        public SettingsView()
+        public AddOrderView()
         {
             InitializeComponent();
         }

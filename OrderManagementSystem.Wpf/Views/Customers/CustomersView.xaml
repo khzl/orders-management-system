@@ -7,47 +7,48 @@
              xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
              xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1000"
+             d:DesignHeight="700" d:DesignWidth="1200"
              Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <converters:NumericToVisibilityConverter x:Key="NumericToVisibilityConverter"/>
     </UserControl.Resources>
 
+    <!--
+    Root Grid - two layers 
+    [0] Page Content (3 rows)
+    [1] loading overlay (Rowspan = 3, ZIndex = 100)
+    -->
     <Grid Margin="20">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Auto Size -->
+            <!-- page header -->
             <RowDefinition Height="Auto"/>
-            <!-- Auto Size -->
+            <!-- toolbar + search -->
             <RowDefinition Height="*"/>
-            <!-- Star Size -->
+            <!-- DataGrid + pagination -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+        <!-- Row 0 - Page Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            
             <TextBlock Text="Customers"
-                       Style="{StaticResource TextHeading1}"
-                       Margin="0,0,0,5"/>
+                       Style="{StaticResource TextHeading1}"/>
             <TextBlock Text="Manage your customer database and search through their records efficiently."
                        Style="{StaticResource TextMuted}"
-                       Margin="0,5,0,0"/>
+                       Margin="0,4,0,0"/>
 
-            <Border Background="#FEE2E2" CornerRadius="6" Margin="0,15,0,0" Padding="15,10"
-                    Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⚠️" Margin="0,0,10,0"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="#B91C1C"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+            <components:AlertNotificationComponent 
+                Message="{Binding ErrorMessage}" 
+                Margin="0,12,0,0"/>
+            
         </StackPanel>
 
+        <!-- Row 1 - Toolbar (action button + search) -->
         <Grid Grid.Row="1" Margin="0,0,0,15">
 
             <Grid.ColumnDefinitions>
@@ -57,31 +58,46 @@
                 <!-- Auto Size -->
             </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                
                 <Button Content="+ Add New Customer"
                         Command="{Binding AddCommand}"
                         Style="{StaticResource SuccessButtonStyle}"
-                        Padding="15,0" Margin="0,0,12,0"/>
-                <Button Content="Refresh"
+                        Height="38" Padding="16,0"/>
+
+                <Button Content="↻ Refresh"
                         Command="{Binding LoadCommand}"
                         Style="{StaticResource OutlineButtonStyle}"
-                        Width="100" Margin="0,0,12,0"/>
+                        Height="38" Width="110" 
+                        Margin="8,0,0,0"/>
+                
                 <!-- Delete All Customers-->
                 <Button Command="{Binding DeleteAllCommand}"
                         Style="{StaticResource DangerButtonStyle}"
-                        Width="130">
+                        Height="38" Padding="14,0" 
+                        Margin="8,0,0,0">
+                    
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗑️" FontSize="13" Margin="0,0,6,0"/>
-                        <TextBlock Text="Delete All"/>
+                        <TextBlock Text="🗑️" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Delete All" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <!-- search controls -->
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
 
-                <ComboBox Width="150" Margin="0,0,12,0"
-                          ItemsSource="{Binding SearchTypes}"
-                          SelectedItem="{Binding SelectedSearchType}">
+                <TextBlock Text="Search By:" 
+                           Style="{StaticResource TextMuted}"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                <ComboBox ItemsSource="{Binding SearchTypes}"
+                          SelectedItem="{Binding SelectedSearchType, Mode=TwoWay}"
+                          Width="150" Height="36">
+
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding StringFormat='Search by {0}'}"
@@ -90,68 +106,107 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Grid Width="280">
-                    <TextBox Tag="Type To Search....."
-                             Style="{StaticResource ModernTextBoxStyle}"
-                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="10,0,35,0"/>
-                    <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Right" 
-                               Margin="0,0,12,0" IsHitTestVisible="False" Foreground="{StaticResource TextSecondaryBrush}"/>
-                </Grid>
-            </StackPanel>
+                <TextBlock Text="Keyword:" 
+                           Style="{StaticResource TextMuted}"
+                           VerticalAlignment="Center" 
+                           Margin="16,0,8,0"/>
 
+                <components:ModernSearchBoxComponent 
+                    SearchText="{Binding SearchText , Mode=TwoWay}"
+                    Placeholder="Type To Search......."
+                    Width="280"/>
+
+            </StackPanel>
         </Grid>
 
+        <!-- Row 2 - DataGrid + Pagination -->
         <Grid Grid.Row="2">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <!-- For Data Grid -->
+                <!-- For Data Grid Card  -->
                 <RowDefinition Height="Auto"/>
-                <!-- For Pagination -->
+                <!-- For Pagination Card -->
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="0" VerticalAlignment="Top">
+            <!-- DataGrid Card -->
+            <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="0">
                 <Grid>
+
+                    <StackPanel VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Margin="0,60"
+                                Visibility="{Binding Customers.Count,
+                                Converter={StaticResource ZeroToVisibilityConverter}}">
+                        
+                        <TextBlock Text="👥"
+                                   FontSize="52"
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.35"/>
+                        
+                        <TextBlock Text="No customers found"
+                                   FontSize="16" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Margin="0,14,0,6"/>
+                        
+                        <TextBlock Text="Add a new customer or adjust your search filter."
+                                   HorizontalAlignment="Center"
+                                   Style="{StaticResource TextMuted}"/>
+
+                    </StackPanel>
+                    
                     <DataGrid ItemsSource="{Binding Customers}"
-                      SelectedItem="{Binding SelectedCustomer}"
+                      SelectedItem="{Binding SelectedCustomer , Mode=TwoWay}"
                       Style="{StaticResource ModernDataGridStyle}"
-                      HorizontalAlignment="Stretch"
-                      AutoGenerateColumns="False"
-                      HeadersVisibility="Column"
                       RowHeight="65"
-                      GridLinesVisibility="None"
-                      SelectionMode="Single"
-                      CanUserAddRows="False"
                       RowDetailsVisibilityMode="Collapsed"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.CanContentScroll="True"
-                      ColumnWidth="Auto">
+                      ScrollViewer.CanContentScroll="False"
+                      Visibility="{Binding Customers.Count,
+                        Converter={StaticResource NumericToVisibilityConverter}}">
 
-                        <!-- Here DataGrid Columns Here All Columns In DataGrid -->
+                        <!-- RowStyle -->
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow"
+                                   BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                        <Setter Property="DetailsVisibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        
+                        <!-- ==== Columns Here ======== -->
                         <DataGrid.Columns>
-
+                            
+                            <!-- # ID -->
+                            <DataGridTextColumn Header="#"
+                                                Binding="{Binding CustomerId}"
+                                                Width="0.6" MinWidth="80"/>
+                            
                             <!-- Customer Info -> CustomerName + Email Column -->
                             <DataGridTemplateColumn Header="Customer Info"
-                                            Width="2*" MinWidth="250">
+                                            Width="2*" MinWidth="240">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center" Margin="10,0">
                                             <TextBlock Text="{Binding CustomerName}"
-                                               FontWeight="Bold"
-                                               FontSize="14"
-                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                       FontWeight="SemiBold"
+                                                       FontSize="14"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
                                             <TextBlock Text="{Binding Email}"
-                                               FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                       FontSize="11"
+                                                       Margin="0,2,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Phone Contact -> PhoneNumber Column  -->
-                            <DataGridTemplateColumn Header="Phone Contacts" Width="1.5*" MinWidth="200">
+                            <!-- Phone Contacts : navigate button + count badge  -->
+                            <DataGridTemplateColumn Header="Phone Contacts" 
+                                                    Width="1.5*" MinWidth="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button
@@ -159,7 +214,8 @@
                                                       RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource OutlineButtonStyle}"
-                                            Padding="10,4" Height="38"
+                                            Padding="10,4" Height="36"
+                                            Margin="10,0"
                                             HorizontalAlignment="Left">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="📱"
@@ -169,13 +225,13 @@
                                                 <TextBlock Text="Manage Numbers"
                                                            VerticalAlignment="Center"
                                                            FontWeight="SemiBold"/>
-                                                <Border Background="{StaticResource PrimaryBrush}"
+                                                <Border Background="{DynamicResource PrimaryBrush}"
                                                         CornerRadius="10"
-                                                        Padding="6,1"
+                                                        Padding="6,2"
                                                         Margin="8,0,0,0"
                                                         VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Phones.Count}"
-                                                               Foreground="White"
+                                                               Foreground="{DynamicResource TextOnPrimaryBrush}"
                                                                FontSize="11"
                                                                FontWeight="Bold"/>
                                                 </Border>
@@ -186,47 +242,51 @@
                             </DataGridTemplateColumn>
 
 
-                            <!-- Location Address -> Address Column  -->
+                            <!-- Location / Address  -->
                             <DataGridTemplateColumn Header="Location Address"
-                                            Width="1.5*" MinWidth="200">
+                                            Width="1.5*" MinWidth="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Address}"
                                            VerticalAlignment="Center"
                                            Margin="10,0"
                                            TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                            Style="{StaticResource TextBody}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                             <!-- Actions Column For Delete And Update Customers -->
-                            <DataGridTemplateColumn Header="Actions" Width="1.5*" MinWidth="200">
+                            <DataGridTemplateColumn Header="Actions" Width="1.5*" MinWidth="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal"
+                                                    VerticalAlignment="Center"
+                                                    Margin="8,0">
+                                            
                                             <!-- Edit -->
                                             <Button Command="{Binding DataContext.EditCommand,
-                                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource OutlineButtonStyle}"
-                                                Padding="8,2" Margin="0,0,5,0">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="✏️" FontSize="14" Margin="0,0,6,0"/>
+                                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource OutlineButtonStyle}"
+                                                    Height="34"
+                                                    Padding="10,2" Margin="0,0,6,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="✏️" FontSize="13" Margin="0,0,5,0"/>
                                                     <TextBlock Text="Edit" />
                                                 </StackPanel>
                                             </Button>
 
                                             <!-- Delete Current Row Only -->
-                                            <Button 
-                                            Command="{Binding DataContext.DeleteCommand,
-                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            Style="{StaticResource DangerButtonStyle}"
-                                            Padding="8,2">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="🗑️" FontSize="14" Margin="0,0,6,0"/>
+                                            <Button Command="{Binding DataContext.DeleteCommand,
+                                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DangerButtonStyle}"
+                                                    Height="34"
+                                                    Padding="10,2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="🗑️" FontSize="13" Margin="0,0,5,0"/>
                                                     <TextBlock Text="Delete" />
                                                 </StackPanel>
                                             </Button>
@@ -237,36 +297,36 @@
 
                             <!-- Add Column Toggle Professional -->
                             <DataGridTemplateColumn Header="Row Details" 
-                                                Width="2*" MinWidth="200">
+                                                Width="0.8*" MinWidth="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <ToggleButton x:Name="ExpanderBtn" 
-                                                  Content="➡" 
-                                                  FontSize="20"
-                                                  FontWeight="Bold"
-                                                  Width="30"
-                                                  Height="30"
-                                                  IsChecked="{Binding IsDetailsExpanded, 
-                                                  RelativeSource={RelativeSource AncestorType=DataGridRow}, 
-                                                  Converter={StaticResource BoolToVisibilityConverter},
-                                                  Mode=TwoWay}"
-                                                  Style="{StaticResource GhostToggleButtonStyle}">
+                                        <ToggleButton x:Name="ExpanderBtn"
+                                                      IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                                                      Style="{StaticResource GhostToggleButtonStyle}"
+                                                      Width="32" Height="32"
+                                                      HorizontalAlignment="Center"
+                                                      ToolTip="Show / Hide Contact Details">
+                                            <!-- Rotates 90 Dgree -->
                                             <ToggleButton.RenderTransform>
-                                                <RotateTransform Angle="0" CenterX="15" CenterY="15"/>
+                                                <RotateTransform Angle="0" CenterX="16" CenterY="16"/>
                                             </ToggleButton.RenderTransform>
+                                            <TextBlock Text="›"
+                                                       FontSize="20"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"/>
                                         </ToggleButton>
+                                        
                                         <DataTemplate.Triggers>
                                             <Trigger SourceName="ExpanderBtn" Property="IsChecked" Value="True">
-                                                <Setter TargetName="ExpanderBtn" Property="Content" Value="‹"/>
-                                                <Setter TargetName="ExpanderBtn" Property="Foreground" 
-                                                    Value="{StaticResource PrimaryBrush}"/>
                                                 <Trigger.EnterActions>
                                                     <BeginStoryboard>
                                                         <Storyboard>
                                                             <DoubleAnimation Storyboard.TargetName="ExpanderBtn" 
-                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                               To="90" 
-                                               Duration="0:0:0.2"/>
+                                                                             Storyboard.TargetProperty=
+                                                              "(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                             To="90" 
+                                                                             Duration="0:0:0.2"/>
                                                         </Storyboard>
                                                     </BeginStoryboard>
                                                 </Trigger.EnterActions>
@@ -274,8 +334,9 @@
                                                     <BeginStoryboard>
                                                         <Storyboard>
                                                             <DoubleAnimation Storyboard.TargetName="ExpanderBtn" 
-                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                 To="0" Duration="0:0:0.2"/>
+                                                                             Storyboard.TargetProperty=
+                                                               "(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                             To="0" Duration="0:0:0.2"/>
                                                         </Storyboard>
                                                     </BeginStoryboard>
                                                 </Trigger.ExitActions>
@@ -290,35 +351,46 @@
                         <!-- Here Row Details Template in Data Grid -->
                         <DataGrid.RowDetailsTemplate>
                             <DataTemplate>
-                                <Border Background="#F1F5F9" 
-                                    Padding="20" BorderThickness="0,1" 
-                                    BorderBrush="{StaticResource BorderBrush}">
+                                <Border Background="{DynamicResource SurfaceHoverBrush}"  
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="0,1,0,1"
+                                        Padding="20,14">
                                     <StackPanel>
+                                        
                                         <TextBlock Text="All Contact Numbers" 
-                                               FontWeight="Bold" 
-                                               Margin="0,0,0,10" 
-                                               Foreground="#475569"/>
-                                        <ItemsControl 
-                                        ItemsSource="{Binding Phones}">
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   Margin="0,0,0,10" 
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <ItemsControl ItemsSource="{Binding Phones}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" 
-                                                            Margin="0,0,0,5">
-                                                        <Border Background="#E2E8F0" 
-                                                            Padding="8,4" 
-                                                            CornerRadius="4">
+                                                                Margin="0,0,0,6">
+                                                        <Border Background="{DynamicResource BorderBrush}" 
+                                                                Padding="8,3" 
+                                                                CornerRadius="4">
                                                             <TextBlock Text="{Binding PhoneType}" 
-                                                                   FontSize="10" 
-                                                                   FontWeight="Bold"/>
+                                                                       FontSize="10" 
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                         </Border>
                                                         <TextBlock Text="{Binding PhoneNumber}" 
-                                                               Margin="10,0" 
-                                                               VerticalAlignment="Center"/>
-                                                        <TextBlock Text="(Primary)" 
-                                                               Foreground="#0284C7"
-                                                               FontSize="11" 
-                                                               Visibility="{Binding IsPrimary, 
-                                                               Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                                   Margin="10,0,0,0" 
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <Border Background="{DynamicResource InfoBackgroundBrush}"
+                                                                CornerRadius="4"
+                                                                Padding="6,2"
+                                                                Margin="8,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{Binding IsPrimary,
+                                                                Converter={StaticResource BoolToVisibilityConverter}}">
+                                                            <TextBlock Text="Primary ★"
+                                                                       FontSize="10"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource InfoDarkBrush}"/>
+                                                        </Border>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -331,15 +403,48 @@
                 </Grid>
             </Border>
 
+            <!-- Pagination Card -->
             <Border Grid.Row="1"
                     Style="{StaticResource CardStyle}"
                     Margin="0,10,0,0"
-                    Padding="2,2"
-                    VerticalAlignment="Bottom">
+                    Padding="4,6">
                 <components:PaginationComponent
-                            CurrentPage="{Binding CurrentPage, Mode=TwoWay}"
-                            TotalPages="{Binding TotalPages}"/>
+                    CurrentPage="{Binding CurrentPage, Mode=TwoWay}"
+                    TotalPages="{Binding TotalPages}"
+                    HorizontalAlignment="Stretch"
+                    Margin="6"/>
             </Border>
         </Grid>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.RowSpan="3"
+              Panel.ZIndex="100"
+              Visibility="{Binding IsLoading,
+              Converter={StaticResource BoolToVisibilityConverter}}">
+
+            <Rectangle Fill="{DynamicResource OverlayBrush}"/>
+
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    CornerRadius="12"
+                    Padding="40,28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="220">
+
+                <StackPanel HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True"
+                                 Height="4" Width="160"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource PrimaryBrush}"
+                                 Background="Transparent"
+                                 BorderThickness="0"/>
+                    <TextBlock Text="Loading Customers...."
+                               HorizontalAlignment="Center"
+                               Style="{StaticResource TextMuted}"
+                               FontSize="14"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+        
     </Grid>
 </UserControl>

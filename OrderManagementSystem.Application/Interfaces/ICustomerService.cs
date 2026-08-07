@@ -11,7 +11,12 @@ namespace OrderManagementSystem.Application.Interfaces
     public interface ICustomerService
     {
         // Customer CRUD
-        public Task<Result<PaginationResult<CustomerDto>>> GetAllAsync(int pageNumber,int pageSize);
+        public Task<Result<PaginationResult<CustomerDto>>> GetAllAsync(
+            int pageNumber,
+            int pageSize,
+            en_CustomerSearchType? searchType,
+            string? searchText);
+
         public Task<Result<CustomerDto>> GetByIdAsync(int customerId);
         public Task<Result<int>> CreateAsync(CreateCustomerDto createCustomerDto);
         public Task<Result> UpdateAsync(UpdateCustomerDto updateCustomerDto);

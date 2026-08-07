@@ -4,51 +4,186 @@
     <!-- Modern CheckBox -->
     <Style x:Key="ModernCheckBox" TargetType="CheckBox">
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        
         <Setter Property="Template">
             <Setter.Value>
+                
                 <ControlTemplate TargetType="CheckBox">
+                    
                     <StackPanel Orientation="Horizontal">
                         <Grid x:Name="MarkGrid" Width="18" Height="18">
+                            
                             <Border x:Name="Box" 
-                                BorderBrush="{StaticResource BorderBrush}" 
-                                BorderThickness="1.5" 
-                                CornerRadius="4" 
-                                Background="White"/>
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" 
+                                    BorderThickness="1.5" 
+                                    CornerRadius="4"/>
+                            
                             <Path x:Name="CheckMark"
                               Data="M0,4 L3,7 L9,0" 
-                              Stroke="{StaticResource PrimaryBrush}" 
+                              Stroke="{DynamicResource PrimaryBrush}" 
                               StrokeThickness="2" 
                               Visibility="Collapsed"
                               HorizontalAlignment="Center" 
                               VerticalAlignment="Center" 
                               Margin="2"/>
+                            
                         </Grid>
+                        
                         <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        
                     </StackPanel>
+                    
                     <ControlTemplate.Triggers>
+                        
                         <Trigger Property="IsChecked" Value="true">
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush" 
+                                    Value="{DynamicResource PrimaryBrush}"/>
                         </Trigger>
+                        
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="Box" Property="Background" Value="#F8FAFC"/>
+                            <Setter TargetName="Box" Property="Background" 
+                                    Value="{DynamicResource BackgroundBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush"
+                                    Value="{DynamicResource TextMutedBrush}"/>
                         </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="Background"
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush"
+                                    Value="{DynamicResource TextDisabledBrush}"/>
+                            <Setter TargetName="CheckMark" Property="Stroke"
+                                    Value="{DynamicResource TextDisabledBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextMutedBrush}"/>
+                        </Trigger>
+                        
+                        
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
+
+    <!-- CheckBox Styles Here -->
+    <Style x:Key="ModernToggleSwitch" TargetType="CheckBox">
+        
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        
+        <Setter Property="Template">
+            <Setter.Value>
+                
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal">
+                        
+                        <Grid x:Name="SwitchContainer" VerticalAlignment="Center">
+
+                            <Border x:Name="Track" 
+                                    Width="40" Height="20" 
+                                    Background="#E2E8F0" 
+                                    CornerRadius="10"
+                                    BorderThickness="0"/>
+
+                            <Border x:Name="Thumb" 
+                                    Width="16" Height="16" 
+                                    Background="{DynamicResource SurfaceBrush}" 
+                                    CornerRadius="8" 
+                                    HorizontalAlignment="Left" 
+                                    Margin="2,0,0,0">
+                                
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="ThumbTranslate" X="0"/>
+                                </Border.RenderTransform>
+                                
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
+                                </Border.Effect>
+                                
+                            </Border>
+                        </Grid>
+
+                        <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ControlTemplate.Triggers>
+                        
+                        <Trigger Property="IsChecked" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbTranslate" 
+                                                         Storyboard.TargetProperty="X" 
+                                                         To="20" Duration="0:0:0.18"/>
+                                        
+                                        <ColorAnimation Storyboard.TargetName="Track" 
+                                                        Storyboard.TargetProperty
+                                                        = "(Border.Background).(SolidColorBrush.Color)" 
+                                                        To="#3B82F6" 
+                                                        Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbTranslate" 
+                                                         Storyboard.TargetProperty="X" 
+                                                         To="0" Duration="0:0:0.18"/>
+                                        <ColorAnimation Storyboard.TargetName="Track" 
+                                                        Storyboard.TargetProperty
+                                                        = "(Border.Background).(SolidColorBrush.Color)" 
+                                                        To="#E2E8F0" 
+                                                        Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
+                        
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Track" Property="Opacity" Value="0.8"/>
+                        </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Track" Property="Background" 
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                            <Setter TargetName="SwitchContainer" Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                        
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Modern Action CheckBox Styles -->
     <Style x:Key="ModernActionCheckBox" TargetType="CheckBox">
+        
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        
         <Setter Property="Template">
             <Setter.Value>
+                
                 <ControlTemplate TargetType="CheckBox">
+                    
                     <Border x:Name="OuterBorder" 
                         Background="{TemplateBinding Background}" 
                         BorderBrush="Transparent" 
@@ -57,16 +192,18 @@
                         Padding="{TemplateBinding Padding}">
 
                         <StackPanel Orientation="Horizontal">
+                            
                             <Grid Width="20" Height="20">
+                                
                                 <Border x:Name="Box" 
-                                    BorderBrush="{StaticResource BorderBrush}" 
-                                    BorderThickness="2" 
-                                    CornerRadius="5" 
-                                    Background="White"/>
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" 
+                                        BorderThickness="2" 
+                                        CornerRadius="5"/>
 
                                 <Path x:Name="CheckMark"
                                   Data="M4,10 L8,14 L16,6" 
-                                  Stroke="{StaticResource PrimaryBrush}" 
+                                  Stroke="{DynamicResource PrimaryBrush}" 
                                   StrokeThickness="2.5" 
                                   StrokeLineJoin="Round" 
                                   StrokeStartLineCap="Round"
@@ -74,20 +211,40 @@
                             </Grid>
 
                             <ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            
                         </StackPanel>
+                        
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
-                            <Setter TargetName="OuterBorder" Property="Background" Value="#F0F7FF"/>
+                            <Setter TargetName="Box" Property="BorderBrush" 
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter TargetName="OuterBorder" Property="Background" 
+                                    Value="{DynamicResource PrimaryLightBrush}"/>
                         </Trigger>
 
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
-                            <Setter TargetName="OuterBorder" Property="Background" Value="#F8FAFC"/>
+                            <Setter TargetName="Box" Property="BorderBrush" 
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter TargetName="OuterBorder" Property="Background" 
+                                    Value="{DynamicResource BackgroundBrush}"/>
                         </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="Background"
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush"
+                                    Value="{DynamicResource TextDisabledBrush}"/>
+                            <Setter TargetName="CheckMark" Property="Stroke"
+                                    Value="{DynamicResource TextDisabledBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextMutedBrush}"/>
+                            <Setter TargetName="OuterBorder"
+                                    Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                        
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -98,88 +255,11 @@
     <!--ModernCheckBox Style-->
     <Style x:Key="ModernCheckBoxStyle" TargetType="CheckBox">
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Foreground" Value="#4A4A4A"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,8,0,8"/>
         <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-
-
-    <!-- CheckBox Styles Here -->
-    <Style x:Key="ModernToggleSwitch" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="CheckBox">
-                    <StackPanel Orientation="Horizontal">
-                        <Grid x:Name="SwitchContainer" VerticalAlignment="Center">
-                            <Border x:Name="Track" 
-                            Width="40" Height="20" 
-                            Background="#E2E8F0" 
-                            CornerRadius="10"
-                            BorderThickness="0"/>
-
-                            <Border x:Name="Thumb" 
-                            Width="16" Height="16" 
-                            Background="White" 
-                            CornerRadius="8" 
-                            HorizontalAlignment="Left" 
-                            Margin="2,0,0,0">
-                                <Border.RenderTransform>
-                                    <TranslateTransform x:Name="ThumbTranslate" X="0"/>
-                                </Border.RenderTransform>
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
-                                </Border.Effect>
-                            </Border>
-                        </Grid>
-
-                        <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ThumbTranslate" 
-                                                 Storyboard.TargetProperty="X" 
-                                                 To="20" Duration="0:0:0.2"/>
-                                        <ColorAnimation Storyboard.TargetName="Track" 
-                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" 
-                                                To="#3B82F6" 
-                                                Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ThumbTranslate" 
-                                                 Storyboard.TargetProperty="X" 
-                                                 To="0" Duration="0:0:0.2"/>
-                                        <ColorAnimation Storyboard.TargetName="Track" 
-                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" 
-                                                To="#E2E8F0" 
-                                                Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Track" Property="Opacity" Value="0.8"/>
-                        </Trigger>
-
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Track" Property="Background" Value="#F1F5F9"/>
-                            <Setter Property="Foreground" Value="#94A3B8"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
     </Style>
     
 </ResourceDictionary>

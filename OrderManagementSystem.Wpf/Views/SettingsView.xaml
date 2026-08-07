@@ -1,186 +1,283 @@
 ﻿<UserControl x:Class="OrderManagementSystem.Wpf.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Views"
-             mc:Ignorable="d" 
+             xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
+             mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="850"
-             Background="{StaticResource BackgroundBrush}">
+             Background="{DynamicResource BackgroundBrush}">
 
-    <Grid Margin="20">
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:InverseBoolConverter      x:Key="InverseBoolConverter"/>
+    </UserControl.Resources>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <!--
+        Root Grid — two layers:
+          [0] Scrollable settings content
+          [1] Loading overlay (Panel.ZIndex=100)
+    -->
+    <Grid>
 
-        <StackPanel Grid.Row="0"
-                    Margin="0,0,0,24">
-            <TextBlock 
-                   Text="System Settings"
-                   FontSize="26"
-                   FontWeight="Bold"
-                   Foreground="#1A1A1A"/>
-            <TextBlock Text="Configure and customize your Order Management System application preferences."
-                       FontSize="13"
-                       Foreground="#7A7A7A"
-                       Margin="0,4,0,0"/>
-        </StackPanel>
+        <!-- ═══════════════════════════════════════════════════════════════
+             Layer 0 – page content
+        ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- page header  -->
+                <RowDefinition Height="*"/>
+                <!-- card content -->
+                <RowDefinition Height="Auto"/>
+                <!-- action bar   -->
+            </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto">
-            <StackPanel MaxWidth="700" HorizontalAlignment="Stretch">
-
-                <Border Style="{StaticResource SettingsCardStyle}">
-                    <Border.Effect>
-                        <DropShadowEffect Color="#000"
-                                          BlurRadius="15"
-                                          ShadowDepth="2"
-                                          Opacity="0.03"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <TextBlock Text="Appearance &amp; Localization"
-                                   Style="{StaticResource SectionHeaderStyle}"/>
-
-                        <Grid Margin="0,0,0,16">
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Text="Language:"
-                                       Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox Grid.Column="1"
-                                      ItemsSource="{Binding AvailableLanguages}" 
-                                      SelectedItem="{Binding SelectedLanguage}" 
-                                      Width="220" 
-                                      HorizontalAlignment="Left" 
-                                      Padding="8,6"/>
-                        </Grid>
-
-                        <CheckBox 
-                            Content="Enable Dark Mode Custom Theme" 
-                            IsChecked="{Binding IsDarkMode}" 
-                            Style="{StaticResource ModernCheckBoxStyle}"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource SettingsCardStyle}">
-                    <Border.Effect>
-                        <DropShadowEffect Color="#000" 
-                                          BlurRadius="15" 
-                                          ShadowDepth="2" 
-                                          Opacity="0.03"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <TextBlock Text="Application Connectivity" 
-                                   Style="{StaticResource SectionHeaderStyle}"/>
-
-                        <CheckBox
-                            Content="Enable real-Time Push Notifications" 
-                            IsChecked="{Binding EnableNotifications}" 
-                            Style="{StaticResource ModernCheckBoxStyle}"
-                            Margin="0,0,0,15"/>
-
-                        <Grid>
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock 
-                                Text="API Base URL:" 
-                                Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox 
-                                Grid.Column="1" 
-                                Text="{Binding ApiBaseUrl, UpdateSourceTrigger=PropertyChanged}" 
-                                Style="{StaticResource ModernTextBoxStyle}"
-                                Padding="8,6"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-
-                <Border Style="{StaticResource SettingsCardStyle}">
-                    <Border.Effect>
-                        <DropShadowEffect 
-                            Color="#000" 
-                            BlurRadius="15" 
-                            ShadowDepth="2" 
-                            Opacity="0.03"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <TextBlock 
-                            Text="Business Defaults"
-                            Style="{StaticResource SectionHeaderStyle}"/>
-
-                        <Grid>
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock 
-                                Text="Default Tax Rate (%):" 
-                                Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox 
-                                Grid.Column="1" 
-                                Text="{Binding DefaultTaxRate, UpdateSourceTrigger=PropertyChanged}" 
-                                Style="{StaticResource ModernTextBoxStyle}"
-                                Width="200" 
-                                HorizontalAlignment="Left" 
-                                Padding="8,6"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
+            <!-- ── Page header ─────────────────────────────────────── -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <!--
+                    FIX: was inline FontSize="26"/FontWeight="Bold"/"#1A1A1A".
+                    #1A1A1A ≈ Slate900 ≈ TextPrimaryBrush — use the semantic style.
+                -->
+                <TextBlock Text="System Settings"
+                           Style="{StaticResource TextHeading1}"/>
+                <!--
+                    FIX: was inline FontSize="13"/Foreground="#7A7A7A".
+                    #7A7A7A ≈ Slate500 = TextSecondaryBrush — use TextMuted.
+                -->
+                <TextBlock Text="Configure and customise your Order Management System preferences."
+                           Style="{StaticResource TextMuted}"
+                           Margin="0,4,0,0"/>
             </StackPanel>
-        </ScrollViewer>
 
-        <Border Grid.Row="2"
-                BorderThickness="0,1,0,0"
-                BorderBrush="#EAEAEA"
-                Padding="0,16,0,0"
-                Margin="0,16,0,0">
-            <Grid>
+            <!-- ── Settings cards ──────────────────────────────────── -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                <StackPanel MaxWidth="700" HorizontalAlignment="Stretch">
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                    <!-- Card 1: Appearance & Localisation -->
+                    <!--
+                        FIX: redundant inline DropShadowEffect removed from all cards.
+                        SettingsCardStyle already applies a shadow; adding a second
+                        DropShadowEffect doubles the opacity and creates a heavier shadow
+                        than intended.
+                    -->
+                    <Border Style="{DynamicResource SettingsCardStyle}">
+                        <StackPanel>
 
-                <TextBlock 
-                     Grid.Column="0" 
-                     Text="{Binding StatusMessage}" 
-                     Foreground="#2E7D32"
-                     VerticalAlignment="Center" 
-                     FontWeight="SemiBold"
-                     FontSize="13"/>
+                            <TextBlock Text="Appearance &amp; Localisation"
+                                       Style="{DynamicResource SectionHeaderStyle}"/>
 
-                <Button 
-                    Grid.Column="1" 
-                    Command="{Binding ResetCommand}"
-                    Content="Reset to Defaults" 
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    Width="180"
-                    Height="40"
-                    Margin="0,0,12,0"/>
-                
-                <Button
-                    Grid.Column="2" 
-                    Command="{Binding SaveCommand}" 
-                    Content="Save Settings" 
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    Width="140"
-                    Height="40"/>
-            </Grid>
-        </Border>
+                            <!-- Language picker -->
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Language:"
+                                           Style="{DynamicResource FieldLabelStyle}"/>
+
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding AvailableLanguages}"
+                                          SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                          Width="220"
+                                          HorizontalAlignment="Left"/>
+                            </Grid>
+
+                            <!-- Dark mode toggle -->
+                            <CheckBox Content="Enable Dark Mode"
+                                      IsChecked="{Binding IsDarkMode, Mode=TwoWay}"
+                                      Style="{DynamicResource ModernToggleSwitch}"/>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card 2: Application Connectivity -->
+                    <Border Style="{DynamicResource SettingsCardStyle}">
+                        <StackPanel>
+
+                            <TextBlock Text="Application Connectivity"
+                                       Style="{DynamicResource SectionHeaderStyle}"/>
+
+                            <!-- Push notifications toggle -->
+                            <CheckBox Content="Enable Real-Time Push Notifications"
+                                      IsChecked="{Binding EnableNotifications, Mode=TwoWay}"
+                                      Style="{DynamicResource ModernToggleSwitch}"
+                                      Margin="0,0,0,20"/>
+
+                            <!-- API URL field -->
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Text="API Base URL:"
+                                           Style="{DynamicResource FieldLabelStyle}"/>
+
+                                <TextBox Grid.Row="0" Grid.Column="1"
+                                         Text="{Binding ApiBaseUrl,
+                                             Mode=TwoWay,
+                                             UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{DynamicResource ModernTextBoxStyle}"/>
+
+                                <!-- Inline hint under the URL field -->
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                           Text="Must start with http:// or https://"
+                                           Style="{DynamicResource TextSmall}"
+                                           Margin="0,5,0,0"/>
+                            </Grid>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card 3: Business Defaults -->
+                    <Border Style="{DynamicResource SettingsCardStyle}">
+                        <StackPanel>
+
+                            <TextBlock Text="Business Defaults"
+                                       Style="{DynamicResource SectionHeaderStyle}"/>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Text="Default Tax Rate (%):"
+                                           Style="{DynamicResource FieldLabelStyle}"/>
+
+                                <TextBox Grid.Row="0" Grid.Column="1"
+                                         Text="{Binding DefaultTaxRate,
+                                             Mode=TwoWay,
+                                             UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{DynamicResource ModernTextBoxStyle}"
+                                         Width="160"
+                                         HorizontalAlignment="Left"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                           Text="Enter a value between 0 and 100."
+                                           Style="{DynamicResource TextSmall}"
+                                           Margin="0,5,0,0"/>
+                            </Grid>
+
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── Action bar ───────────────────────────────────────── -->
+            <!--
+                FIX: BorderBrush="#EAEAEA" → DynamicResource BorderBrush.
+                FIX: StatusMessage Foreground="#2E7D32" (hardcoded green that
+                     never changed colour even for errors) replaced with a
+                     DataTrigger that switches between SuccessTextBrush and
+                     DangerTextBrush based on StatusIsError.
+            -->
+            <Border Grid.Row="2"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    Padding="0,16,0,0"
+                    Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!--
+                        Status message — colour is driven by StatusIsError via
+                        DataTrigger so errors appear in red and successes in green.
+                    -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding StatusMessage}"
+                               VerticalAlignment="Center"
+                               FontWeight="Medium"
+                               FontSize="13">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <!-- Default: success colour -->
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource SuccessTextBrush}"/>
+                                <Style.Triggers>
+                                    <!-- Error state: switch to danger colour -->
+                                    <DataTrigger Binding="{Binding StatusIsError}" Value="True">
+                                        <Setter Property="Foreground"
+                                                Value="{DynamicResource DangerTextBrush}"/>
+                                    </DataTrigger>
+                                    <!-- Empty message: collapse so it takes no space -->
+                                    <DataTrigger Binding="{Binding StatusMessage}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <Button Grid.Column="1"
+                            Content="Reset to Defaults"
+                            Command="{Binding ResetCommand}"
+                            Style="{DynamicResource OutlineButtonStyle}"
+                            Height="42" Padding="20,0"
+                            Margin="0,0,10,0"/>
+
+                    <Button Grid.Column="2"
+                            Content="Save Settings"
+                            Command="{Binding SaveCommand}"
+                            Style="{DynamicResource PrimaryButtonStyle}"
+                            Height="42" Width="150"/>
+                </Grid>
+            </Border>
+
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             Layer 1 – loading overlay
+             ADDED: IsLoading existed in the ViewModel but had no visual
+             counterpart in the View.
+        ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Panel.ZIndex="100"
+              Visibility="{Binding IsLoading,
+                  Converter={StaticResource BoolToVisibilityConverter}}">
+
+            <Rectangle Fill="{DynamicResource OverlayBrush}"/>
+
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    CornerRadius="12"
+                    Padding="40,28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="220">
+                <StackPanel HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True"
+                                 Height="4" Width="160"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource PrimaryBrush}"
+                                 Background="Transparent"
+                                 BorderThickness="0"/>
+                    <TextBlock Text="Saving settings…"
+                               HorizontalAlignment="Center"
+                               Style="{StaticResource TextMuted}"
+                               FontSize="14"/>
+                </StackPanel>
+            </Border>
+
+        </Grid>
 
     </Grid>
 </UserControl>

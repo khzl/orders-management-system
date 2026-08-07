@@ -3,31 +3,41 @@
 
     <!-- CardStyles -->
     <Style x:Key="CardStyle" TargetType="Border">
-        <Setter Property="Background" Value="White"/>
+        
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Padding" Value="20"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
 
-        <Style.Resources>
-            <DropShadowEffect x:Key="CardShadow" 
-                          BlurRadius="15" 
-                          ShadowDepth="2" 
-                          Opacity="0.05" 
-                          Color="Black"/>
-        </Style.Resources>
-
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="2"
+                                  Opacity="0.05" Color="Black"/>
+            </Setter.Value>
+        </Setter>
+        
     </Style>
 
     <!-- SettingsCard Style -->
     <Style x:Key="SettingsCardStyle" TargetType="Border">
-        <Setter Property="Background" Value="White"/>
+        
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="24"/>
         <Setter Property="Margin" Value="0,0,0,20"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="#EAEAEA"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1"
+                                  Opacity="0.04" Color="Black"/>
+            </Setter.Value>
+        </Setter>
+        
     </Style>
-    
     
 </ResourceDictionary>

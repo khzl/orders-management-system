@@ -19,12 +19,14 @@
         xmlns:settingViews="clr-namespace:OrderManagementSystem.Wpf.Views"
         xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
         mc:Ignorable="d"
-        Title="Orders Management System" Height="720" Width="1280"
+        Title="Order Management System" Height="720" Width="1280"
+        MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}">
 
     <Window.Resources>
-        <!-- link All ViewModel in View Auto -->
+        <!-- link All ViewModel in View Auto
+             ViewModel -> View Wiring (DataTemplate Auto-Resolution) -->
         
         <!-- linked Navigation To DashboardView -->
         <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
@@ -53,7 +55,10 @@
         <DataTemplate DataType="{x:Type orderViewModel:OrdersViewModel}">
             <orderViews:OrdersView/>
         </DataTemplate>
-        
+
+        <DataTemplate DataType="{x:Type orderViewModel:AddOrderViewModel}">
+            <orderViews:AddOrderView/>
+        </DataTemplate>
         
         <!-- linked Navigation To ProductsView And AddProductsView And UpdateProductsView -->
         <DataTemplate DataType="{x:Type productViewModel:ProductsViewModel}">
@@ -72,82 +77,191 @@
             <settingViews:SettingsView/>
         </DataTemplate>
         
+        <!-- Dialog Overlay Template -->
+        <DataTemplate DataType="{x:Type viewModels:DialogViewModel}">
+            <StackPanel MinWidth="360" MaxWidth="480">
+                
+                <!-- Title -->
+                <TextBlock Text="{Binding Title}"
+                           Style="{StaticResource TextHeading2}"
+                           Margin="0,0,0,12"/>
+                
+                <!-- Message -->
+                <TextBlock Text="{Binding Message}"
+                           Style="{StaticResource TextMuted}"
+                           TextWrapping="Wrap"
+                           LineHeight="22"
+                           Margin="0,0,0,28"/>
+                
+                <!-- Button -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    
+                    <!-- Cancel - visible only for confirmation Dialogs
+                     info dialogs (IsConfirmation = false) show only -->
+
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Width="110" Height="40"
+                            Margin="0,0,10,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource OutlineButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConfirmation}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    <!-- Confirm / Ok - always Visible -->
+                    <Button Command="{Binding ConfirmCommand}"
+                            Width="110" Height="40">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+                                <Setter Property="Content" Value="Confirm"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConfirmation}" Value="False">
+                                        <Setter Property="Content" Value="Ok"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
         
-        <!-- Linked Converter here-->
+        <!-- Linked Converters here -->
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         
     </Window.Resources>
 
+    <!--
+        Root Grid — three layers (ZIndex order):
+          [0] Sidebar + main content  (2 columns, full window)
+          [1] Dialog backdrop + card  (ColumnSpan=2, ZIndex=500)
+    -->
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260"/>
             <!-- Fixed Size For Sidebar -->
             <ColumnDefinition Width="*"/>
-            <!-- Star Size  For Header -->
+            <!-- Star Size  For Main Content Area -->
         </Grid.ColumnDefinitions>
 
         <!-- Sidebar Response Commands From MainViewModel -->
-        <components:SidebarComponent Grid.Column="0"
-                                     DashboardCommand="{Binding GoToDashboardCommand}"
-                                     CustomersCommand="{Binding GoToCustomersCommand}"
-                                     OrdersCommand="{Binding GoToOrdersCommand}"
-                                     ProductsCommand="{Binding GoToProductsCommand}"
-                                     ReportsCommand="{Binding GoToReportsCommand}"
-                                     SettingsCommand="{Binding GoToSettingsCommand}"/>
+        <components:SidebarComponent 
+            Grid.Column="0"
+            DashboardCommand="{Binding GoToDashboardCommand}"
+            CustomersCommand="{Binding GoToCustomersCommand}"
+            OrdersCommand="{Binding GoToOrdersCommand}"
+            ProductsCommand="{Binding GoToProductsCommand}"
+            ReportsCommand="{Binding GoToReportsCommand}"
+            SettingsCommand="{Binding GoToSettingsCommand}"/>
 
+        <!-- Main Content Area (Header + Scrollable Content + Footer) -->
+        
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="70"/>
-                <!-- fixed Size -->
+                <!-- fixed Size for Header -->
                 <RowDefinition Height="*"/>
-                <!-- Star Size -->
+                <!-- Star Size for content (scorllable) -->
                 <RowDefinition Height="Auto"/>
-                <!-- Auto Size -->
+                <!-- Auto Size for footer  -->
             </Grid.RowDefinitions>
 
             <!-- Header -->
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource  BorderBrush}"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource  BorderBrush}"
                     BorderThickness="0,0,0,1"
                     Padding="30,0">
                 <DockPanel LastChildFill="False">
-
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Welcome back Khazaal..!    "
+                    <!-- Left: greeting -->
+                    <StackPanel DockPanel.Dock="Left" 
+                                Orientation="Horizontal" 
+                                VerticalAlignment="Center">
+                        
+                        <TextBlock Text="Welcome back Khazaal..!"
                                    Style="{StaticResource TextHeading2}"
-                                   Margin="0" VerticalAlignment="Center"/>
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
 
+                    <!-- Right: Quick Actions + User Avatar -->
                     <StackPanel DockPanel.Dock="Right"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <components:CustomButtonComponent Text="AddOrder"
-                                                          Icon="➕"
-                                                          Command="{Binding AddOrderCommand}"
-                                                          Width="160" Height="40"/>
-                        <Ellipse
-                                 Width="40" Height="40"
-                                 Fill="{StaticResource PrimaryBrush}"
-                                 Stroke="{StaticResource BorderBrush}"
-                                 StrokeThickness="1"/>
+                        
+                        <components:CustomButtonComponent 
+                            Text="Add Order"
+                            Icon="➕"
+                            Command="{Binding AddOrderCommand}"
+                            Width="160" Height="40"
+                            Margin="0,0,16,0"/>
+
+                        <Grid Width="40" Height="40">
+                            
+                            <Ellipse Fill="{DynamicResource PrimaryBrush}"
+                                     Stroke="{DynamicResource BorderBrush}"
+                                     StrokeThickness="1.5"/>
+                            
+                            <TextBlock Text="K"
+                                       Foreground="{DynamicResource TextOnPrimaryBrush}"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                        
                     </StackPanel>
                 </DockPanel>
             </Border>
 
-            <!-- Content Area Replace On Base Current ViewModel -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Auto">
+            <!-- Navigable Content Area -->
+            <ScrollViewer Grid.Row="1" 
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                
                 <Border Padding="30">
+                    
                     <!-- Main Content المحتوى الرئيسي يظهر هنا -->
                     <ContentControl Content="{Binding NavigationService.CurrentViewModel}">
                         <ContentControl.ContentTemplate>
                             <DataTemplate>
-                                <Grid RenderTransformOrigin="0.5,0.5">
+                                <Grid
+                                    x:Name="pageRoot"
+                                    Opacity="0"
+                                    RenderTransformOrigin="0.5,0.5">
                                     <Grid.RenderTransform>
-                                        <TranslateTransform Y="10"/>
+                                        <TranslateTransform Y="16"/>
                                     </Grid.RenderTransform>
                                     <ContentPresenter Content="{Binding}"/>
+                                    
+                                    <!-- Slide-Fade in on Every Navigation -->
+                                    <Grid.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetName="pageRoot"
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        From="0" To="1"
+                                                        Duration="0:0:0.22"/>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetName="pageRoot"
+                                                        Storyboard.TargetProperty= 
+                                                        "(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                        From="16" To="0"
+                                                        Duration="0:0:0.22"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Grid.Triggers>
                                 </Grid>
                             </DataTemplate>
                         </ContentControl.ContentTemplate>
@@ -156,36 +270,46 @@
             </ScrollViewer>
 
             <!-- Footer -->
-            <Border Grid.Row="2" Padding="15,10"
-                    Background="{StaticResource BackgroundBrush}"
+            <Border Grid.Row="2"
+                    Background="{DynamicResource BackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,1,0,0"
-                    BorderBrush="{StaticResource BorderBrush}">
+                    Padding="15,10">
+                
                 <TextBlock Text="© 2026 OMS Pro - Khazaal"
                            Style="{StaticResource TextMuted}"
                            HorizontalAlignment="Center"/>
             </Border>
         </Grid>
 
-        <!-- CustomerDialogView Components Here --><!--
+        <!-- Dialog Overlay -->
         <Grid Grid.ColumnSpan="2"
-              Background="#40000000"
-              Visibility="{Binding IsDialogVisible, Converter={StaticResource BoolToVisibilityConverter}}"
-              Panel.ZIndex="1000">
-            <components:CustomDialogViewComponent
-                DataContext="{Binding CurrentDialog}"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="450">
-                <components:CustomDialogViewComponent.RenderTransform>
-                    <ScaleTransform ScaleX="1" ScaleY="1"/>
-                </components:CustomDialogViewComponent.RenderTransform>
-            </components:CustomDialogViewComponent>
-        </Grid>-->
-
-        <!-- Dialog Overlay يظهر هنا تبع ال CustomMessageBox -->
-        <!--<ContentControl Content="{Binding CurrentDialog}"
-                        Visibility="{Binding IsDialogVisible,Converter={StaticResource BoolToVisibilityConverter}}"
-                        Panel.ZIndex="999"/>-->
+              Panel.ZIndex="500"
+              Visibility="{Binding IsDialogVisible,
+              Converter={StaticResource BoolToVisibilityConverter}}">
+            <!-- semi-transparent backdrop - blocks interactions with content below -->
+            <Rectangle Fill="{DynamicResource OverlayBrush}"
+                       IsHitTestVisible="True"/>
+            
+            <!-- Dialog Card - renders CurrentDialog via the DataTemplate above -->
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    CornerRadius="14"
+                    Padding="32,28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="360" MaxWidth="500">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" Opacity="0.16"
+                                      BlurRadius="30" ShadowDepth="6"
+                                      Direction="270"/>
+                </Border.Effect>
+                <!-- ContentControl auto-applies the DataTemplate
+                DataType = "{x:Type viewModels:DialogViewModel}"
+                defined in window.Resources above -->
+                <ContentControl Content="{Binding CurrentDialog}"/>
+            </Border>
+            
+        </Grid>
         
     </Grid>
 </Window>

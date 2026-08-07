@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OrderManagementSystem.Wpf.Helper.Enums
+namespace OrderManagementSystem.Shared
 {
     public enum en_CustomerSearchType
     {

@@ -6,8 +6,9 @@
              xmlns:local="clr-namespace:OrderManagementSystem.Wpf.Views.Customers"
              xmlns:converters="clr-namespace:OrderManagementSystem.Wpf.Converters"
              xmlns:components="clr-namespace:OrderManagementSystem.Wpf.Components"
-             mc:Ignorable="d" d:DesignWidth="1000"
-             Background="{StaticResource BackgroundBrush}" Height="737">
+             mc:Ignorable="d"
+             d:DesignWidth="1000"
+             Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
@@ -15,73 +16,138 @@
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
     </UserControl.Resources>
 
+    <!--
+    Root Grid - two layers:
+    [0] Scrollable page content 
+    [1] Loading overlay (Panel.ZIndex = 100)
+    -->
+    
     <Grid>
+        
+        <!-- Layer 0 - Scrollable content -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid Margin="40">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/> <!-- page header -->
+                    <RowDefinition Height="Auto"/> <!-- card content -->
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                    <StackPanel Orientation="Horizontal" 
-                                Margin="0,0,0,10">
-                        <Button Command="{Binding CancelCommand}" 
-                                IsEnabled="{Binding IsLoading, 
+                <!-- page header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,24">
+
+                    <Button Command="{Binding CancelCommand}" 
+                            IsEnabled="{Binding IsLoading, 
                                 Converter={StaticResource InverseBoolConverter}}" 
-                                Style="{StaticResource OutlineButtonStyle}" 
-                                Content="←" FontSize="18" 
-                                Padding="10,0" Margin="0,0,15,0"/>
-                        <TextBlock Text="Update Customer" 
-                                   Style="{StaticResource TextHeading1}"
+                            Style="{StaticResource BackButtonStyle}" 
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,14">
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="←"
+                                   FontSize="16"
+                                   Margin="0,0,6,0"
                                    VerticalAlignment="Center"/>
-                    </StackPanel>
+                            <TextBlock Text="Back To Customers List"
+                                   Style="{StaticResource TextMuted}"
+                                   VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <TextBlock Text="Update Customer" 
+                                   Style="{StaticResource TextHeading1}"
+                                   Margin="0,0,0,4"/>
+
                     <TextBlock Text="Modify customer details and phone contacts information." 
                                Style="{StaticResource TextMuted}"/>
                 </StackPanel>
 
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}" 
-                        MaxWidth="1400" HorizontalAlignment="Stretch" Padding="30">
+                <!-- Card -->
+                <Border Grid.Row="1" 
+                        Style="{StaticResource CardStyle}" 
+                        MaxWidth="1400" 
+                        HorizontalAlignment="Stretch" 
+                        Padding="30">
                     <Grid>
-
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/> <!-- Form Component -->
+                            <RowDefinition Height="Auto"/> <!-- Action bar -->
                         </Grid.RowDefinitions>
 
-                        <ScrollViewer Grid.Row="0" 
-                                      VerticalScrollBarVisibility="Auto">
-                            <components:CustomerFormComponent 
-                                Margin="11,0,0,30"
-                                                              CustomerName="{Binding CustomerName}"
-                                                              Email="{Binding Email}"
-                                                              Address="{Binding Address}"
-                                                              ErrorMessage="{Binding ErrorMessage}"
-                                                              IsLoading="{Binding IsLoading}"
-                                                              CustomerPhones="{Binding CustomerPhones}"
-                                                              AddPhoneCommand="{Binding AddPhoneCommand}"
-                                                              RemovePhoneCommand="{Binding RemovePhoneCommand}"
-                                                              UpdatePhoneCommand="{Binding UpdatePhoneCommand}"
-                                                              SetPrimaryCommand="{Binding SetPrimaryCommand}"/>
-                        </ScrollViewer>
 
-                        <Grid Grid.Row="1" Margin="0,20,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                        <components:CustomerFormComponent 
+                            Grid.Row="0"    
+                            Margin="0,0,0,30"
+                            CustomerName="{Binding CustomerName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                            Email="{Binding Email,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                            Address="{Binding Address,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                            ErrorMessage="{Binding ErrorMessage}"
+                            IsLoading="{Binding IsLoading}"
+                            CustomerPhones="{Binding CustomerPhones}"
+                            AddPhoneCommand="{Binding AddPhoneCommand}"
+                            RemovePhoneCommand="{Binding RemovePhoneCommand}"
+                            UpdatePhoneCommand="{Binding UpdatePhoneCommand}"
+                            SetPrimaryCommand="{Binding SetPrimaryCommand}"/>
 
-                            <Button Grid.Column="0" Content="Cancel" 
-                                    Command="{Binding CancelCommand}" 
-                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" 
-                                    Style="{StaticResource OutlineButtonStyle}" Margin="0,0,10,0" Height="45"/>
-                            <Button Grid.Column="1" Content="Update Changes" Command="{Binding SaveCommand}" 
-                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" 
-                                    Style="{StaticResource SuccessButtonStyle}" Height="45"/>
-                        </Grid>
+                        <!-- Action bar -->
+                        <Border Grid.Row="1"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0,1,0,0"
+                                Padding="0,24,0,0">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right">
+                                
+                                <Button Content="Cancel" 
+                                        Command="{Binding CancelCommand}" 
+                                        IsEnabled="{Binding IsLoading,
+                                        Converter={StaticResource InverseBoolConverter}}" 
+                                        Style="{StaticResource OutlineButtonStyle}" 
+                                        Margin="0,0,12,0" 
+                                        Width="120"
+                                        Height="45"/>
+                                <Button Content="Update Changes" 
+                                        Command="{Binding SaveCommand}" 
+                                        IsEnabled="{Binding IsLoading, 
+                                        Converter={StaticResource InverseBoolConverter}}" 
+                                        Style="{StaticResource SuccessButtonStyle}" 
+                                        Width="180"
+                                        Height="45"/>
+                            </StackPanel>
+                        </Border>
+                        
                     </Grid>
                 </Border>
+                
             </Grid>
         </ScrollViewer>
+        
+        <!-- Layer 1  - Loading overlay -->
+        <Grid Panel.ZIndex="100"
+              Visibility="{Binding IsLoading,
+              Converter={StaticResource BoolToVisibilityConverter}}">
+
+            <Rectangle Fill="{DynamicResource OverlayBrush}"/>
+
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    CornerRadius="12"
+                    Padding="40,28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="220">
+                <StackPanel HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True"
+                                 Height="4" Width="160"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource PrimaryBrush}"
+                                 Background="Transparent"
+                                 BorderThickness="0"/>
+                    <TextBlock Text="Saving Changes..."
+                               HorizontalAlignment="Center"
+                               Style="{StaticResource TextMuted}"
+                               FontSize="14"/>
+                </StackPanel>
+            </Border>
+            
+        </Grid>
+        
     </Grid>
 </UserControl>

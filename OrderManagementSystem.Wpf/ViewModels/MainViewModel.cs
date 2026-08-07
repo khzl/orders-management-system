@@ -15,10 +15,10 @@ namespace OrderManagementSystem.Wpf.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        // private field 
+        // ------------- Dependencies -----------------------------------------------
         private readonly INavigationService _navigationService;
 
-        // Two Properties to Control for Overlay 
+        // ---------- Dialog overlay Properties -------------------------------------
         private bool _isDialogVisible;
         public bool IsDialogVisible
         {
@@ -41,23 +41,24 @@ namespace OrderManagementSystem.Wpf.ViewModels
             }
         }
 
-        // public Property 
+        // ----------- Exposed Service (bound by ContentControl in MainWindow) --------------------------
         public INavigationService NavigationService => _navigationService;
 
-        // Commands 
-        public ICommand? GoToDashboardCommand { get; } // ReadOnly
-        public ICommand? GoToCustomersCommand { get; } // ReadOnly
-        public ICommand? GoToOrdersCommand { get; } // ReadOnly
-        public ICommand? GoToProductsCommand { get; } // ReadOnly
-        public ICommand? GoToReportsCommand { get; } // ReadOnly
-        public ICommand? GoToSettingsCommand { get; } // ReadOnly
+        // ----------- Navigation Commands --------------------------------------------------------------
+        public ICommand GoToDashboardCommand { get; } // ReadOnly
+        public ICommand GoToCustomersCommand { get; } // ReadOnly
+        public ICommand GoToOrdersCommand { get; } // ReadOnly
+        public ICommand GoToProductsCommand { get; } // ReadOnly
+        public ICommand GoToReportsCommand { get; } // ReadOnly
+        public ICommand GoToSettingsCommand { get; } // ReadOnly
+        public ICommand AddOrderCommand { get; } // ReadOnly
 
-
-        // public Constructor (Constructor Injection)
+        // --------------------- Constructor ------------------------------------------------------------
         public MainViewModel(INavigationService navigationService)
         {
             _navigationService = navigationService; // Injection 
 
+            // Navigate Between Screens In Sidebar 
             GoToDashboardCommand = new RelayCommand(_ => _navigationService.NavigateTo<DashboardViewModel>());
             GoToCustomersCommand = new RelayCommand(_ => _navigationService.NavigateTo<CustomersViewModel>());
             GoToOrdersCommand = new RelayCommand(_ => _navigationService.NavigateTo<OrdersViewModel>());
@@ -65,27 +66,11 @@ namespace OrderManagementSystem.Wpf.ViewModels
             GoToReportsCommand = new RelayCommand(_ => _navigationService.NavigateTo<ReportsViewModel>());
             GoToSettingsCommand = new RelayCommand(_ => _navigationService.NavigateTo<SettingsViewModel>());
 
-            // Default View Over Open
+            // Navigates Directly To The Add-Order Screen From The Header toolBar
+            AddOrderCommand = new RelayCommand(_ => _navigationService.NavigateTo<AddOrderViewModel>());
+
+            // Open The Default Screen on launch
             _navigationService.NavigateTo<DashboardViewModel>();
-        }
-
-        // Helper Method To Open Any Dialog In Any Where 
-        public void ShowDialog(string title, string message, Action onConfirm)
-        {
-            var dialog = new DialogViewModel(title, message, true);
-
-            // When the dialog completes, run the confirmation callback (if confirmed)
-            // and hide the overlay. Schedule continuation on the UI sync context.
-            dialog.DialogTask.ContinueWith(t =>
-            {
-                if (t.Result)
-                    onConfirm?.Invoke();
-
-                IsDialogVisible = false;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-
-            CurrentDialog = dialog;
-            IsDialogVisible = true;
         }
 
     }

@@ -7,63 +7,40 @@ using OrderManagementSystem.Wpf.Helper;
 
 namespace OrderManagementSystem.Wpf.ViewModels
 {
-    // وسيطاً يحمل البيانات (العنوان، الرسالة) والأوامر (تأكيد، إلغاء).
     public class DialogViewModel : BaseViewModel 
     {
-        // Properties 
-        private string? _title;
-        public string? Title 
-        { 
-            get => _title;
-            set
-            {
-                _title = value;
-                OnPropertyChanged(nameof(Title));
-            } 
-        }
+        // ------------- Display properties -------------
+        public string Title { get; }
+        public string Message { get; }
+        public bool IsConfirmation { get; }
 
-        private string? _message;
-        public string? Message 
-        { 
-            get =>  _message;
-            set
-            {
-                _message = value;
-                OnPropertyChanged(nameof(Message));
-            }
-        }
+        // ------------- Commands --------------------
+        public ICommand ConfirmCommand { get; }
+        public ICommand CancelCommand { get; }
 
-        private bool _isConfirmation;
-        public bool IsConfirmation
-        {
-            get => _isConfirmation;
-            set
-            {
-                _isConfirmation = value;
-                OnPropertyChanged(nameof(IsConfirmation));
-            }
-        }
+        // ----------- Completion Source -------------
+        private readonly TaskCompletionSource<bool> _tcs;
 
-
-        private readonly TaskCompletionSource<bool> _taskCompletionSource = new();
-
-        // Commands
-        public ICommand? ConfirmCommand { get; } // ReadOnly 
-        public ICommand? CancelCommand { get; } // ReadOnly
-
-        // public Constructor (Constructor Injections)
+        // ------------- Constructor ---------------------
         public DialogViewModel(string title,string message, bool isConfirmation = true)
         {
             Title = title;
             Message = message;
             IsConfirmation = isConfirmation;
-            _taskCompletionSource = new TaskCompletionSource<bool>();
 
-            ConfirmCommand = new RelayCommand(_ => _taskCompletionSource.SetResult(true));
-            CancelCommand = new RelayCommand(_ => _taskCompletionSource.SetResult(false));
+            _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            ConfirmCommand = new RelayCommand(_ => _tcs.TrySetResult(true));
+            CancelCommand = new RelayCommand(_ => _tcs.TrySetResult(false));
         }
 
-        // هذه المهمة ننتظرها في الـ Service لتعرف ماذا اختار المستخدم
-        public Task<bool> DialogTask => _taskCompletionSource.Task;
+        // ------------ Awaitable result -----------------
+        public Task<bool> DialogTask => _tcs.Task;
+
+        /// <summary>
+        /// Cancels the dialog, unblocking any awaiter.
+        /// Called during application shutdown to prevent indefinite hangs.
+        /// </summary>
+        public void Cancel() => _tcs.TrySetResult(false);
     }
 }

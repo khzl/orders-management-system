@@ -1,12 +1,11 @@
 ﻿using OrderManagementSystem.Application.Interfaces;
-using OrderManagementSystem.Domain.Entities;
 using OrderManagementSystem.Dtos.Customers;
 using OrderManagementSystem.Wpf.ClientService.Dialog;
 using OrderManagementSystem.Wpf.ClientService.Navigation;
 using OrderManagementSystem.Wpf.ClientServices.EvenService;
 using OrderManagementSystem.Wpf.Commands;
 using OrderManagementSystem.Wpf.Helper;
-using OrderManagementSystem.Wpf.Helper.Enums;
+using OrderManagementSystem.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,26 +20,26 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 {
     public class CustomersViewModel : BaseViewModel
     {
-        // private field
+        // --------------------------- Dependencies -------------------------------------
         private readonly ICustomerService _customerService;
         private readonly INavigationService _navigationService;
         private readonly IDialogService _dialogService;
         private readonly IEventBus _eventBus;
 
-        //(Buffer) list to store data original
+        // Buffer - full page of items returned by the server 
         private List<CustomerDto> _allCustomers = new();
 
-        // Handlers نحتفظ بها لاحقا for Unsubscribe 
+        // EventBus Handler references kept for clean Unsubscribe in Dispose()
         private readonly Action<CustomerCreatedEvent> _onCreated;
         private readonly Action<CustomerUpdatedEvent> _onUpdated;
         private readonly Action<CustomerDeletedEvent> _onDeleted;
         private readonly Action<CustomerDeletedAllEvent> _onDeletedAll;
 
 
-        // property List Collection For Customer list linked for DataGrid
-        public RangeObservableCollection<CustomerDto> Customers { get; set; } = new();
+        // ------------------------------- Collections -----------------------------------
+        public RangeObservableCollection<CustomerDto> Customers { get;} = new();
 
-        // Properties Binding 
+        // ------------------- Bound properties ---------------------------------------------
         private CustomerDto? _selectedCustomer;
 
         public CustomerDto? SelectedCustomer
@@ -63,8 +62,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 OnPropertyChanged(nameof(ErrorMessage));
             }
         }
-
-        // Search Text Property 
+        
         private string? _searchText;
         public string? SearchText
         {
@@ -73,6 +71,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _searchText = value;
                 OnPropertyChanged(nameof(SearchText));
+                ResetPageAndLoad();
             }
         }
 
@@ -83,24 +82,25 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             set
             {
                 if (_isLoading == value)
-                    return; // تاكد ان القيمة تغيرت لتجنب التحديثات الزائدة 
+                    return; 
                 _isLoading = value;
                 OnPropertyChanged(nameof(IsLoading));
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
-        private bool _isDetailsExpanded;
-        public bool IsDetailsExpanded
+        private bool _isExpanded;
+        public bool IsExpanded
         {
-            get => _isDetailsExpanded;
+            get => _isExpanded;
             set
             {
-                _isDetailsExpanded = value;
-                OnPropertyChanged(nameof(IsDetailsExpanded));
+                _isExpanded = value;
+                OnPropertyChanged(nameof(IsExpanded));
             }
         }
 
-        // Pagination Properties 
+        // ---------------------------- Pagination --------------------------------- 
         private int _currentPage = 1;
         public int CurrentPage
         {
@@ -108,31 +108,30 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             set
             {
                 if (_currentPage == value || value < 1)
-                    return; // لا تسمح بأن تكون الصفحة اقل من 1
+                    return; 
 
                 _currentPage = value;
                 OnPropertyChanged(nameof(CurrentPage));
-                // جلب البيانات تلقائياً فور تغير الصفحة القادمة من الـ Component
-                _ = LoadData();
+
+                _ = LoadDataAsync();
             }
         }
 
-        private int _totalPages = 25; // لازم تنطيه مجموع الصفحات بعدد مناسب حتى يكدر يعرض 
+        private int _totalPages = 1;
         public int TotalPages
         {
             get => _totalPages;
             set
             {
-                // لا تسمح بأن تكون الصفحات أفل من 1 حتى لو لم تكن هناك بيانات 
                 if (_totalPages != value)
                 {
-                    _totalPages = value;
+                    _totalPages = Math.Max(1, value);
                     OnPropertyChanged(nameof(TotalPages));
                 }
             }
         }
 
-        private int _pageSize = 10; // Number Of Items Per Page
+        private int _pageSize = 10;
         public int PageSize
         {
             get => _pageSize;
@@ -154,8 +153,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // Selected Search Type property 
-        // Property To Store Selected Search Type 
+        // ---------------------- Search ------------------------------------------------
         private en_CustomerSearchType? _selectedSearchType = en_CustomerSearchType.All;
         public en_CustomerSearchType? SelectedSearchType
         {
@@ -164,23 +162,23 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             {
                 _selectedSearchType = value;
                 OnPropertyChanged(nameof(SelectedSearchType));
+                ResetPageAndLoad();
             }
         }
 
-        // قائمة الأنواع لعرضها في الـ ComboBox
         public IEnumerable<en_CustomerSearchType> SearchTypes =>
             Enum.GetValues(typeof(en_CustomerSearchType)).Cast<en_CustomerSearchType>();
 
 
-        // Command
+        // ------------------- Commands ------------------------------------------------
         public ICommand? LoadCommand { get; }
         public ICommand? AddCommand { get; }
-        public ICommand? DeleteCommand { get; } // Delete One (in Row)
-        public ICommand? DeleteAllCommand { get; } // Delete All (in Top Button)
+        public ICommand? DeleteCommand { get; } 
+        public ICommand? DeleteAllCommand { get; } 
         public ICommand? EditCommand { get; }
-        public ICommand? NavigateToPhonesCommand { get; } // Go To PhonesView
+        public ICommand? NavigateToPhonesCommand { get; } 
 
-        // Constructor 
+        // -------------------- Constructor --------------------------------------------
         public CustomersViewModel(
             ICustomerService customerService, 
             INavigationService navigationService,
@@ -193,15 +191,19 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             _dialogService = dialogService;
             _eventBus = eventBus;
 
-            // ─────────────────────────────────────────
-            // Subscribe — كل Event يعمل Reload تلقائي
-            // ─────────────────────────────────────────
-            _onCreated = async _ => await LoadData();
-            _onUpdated = async _ => await LoadData();
-            _onDeleted = async _ => await LoadData();
-            _onDeletedAll = _ => App.Current.Dispatcher.Invoke(() =>
+            // EventBus subscriptions - handlers stored so Dispose() can remove them
+
+            _onCreated = async _ => await LoadDataAsync();
+            _onUpdated = async _ => await LoadDataAsync();
+            _onDeleted = async _ => await LoadDataAsync();
+
+            _onDeletedAll = _ => App.Current.Dispatcher.InvokeAsync(() =>
             {
                 _allCustomers.Clear();
+                Customers.Clear();
+                TotalCount = 0;
+                TotalPages = 1;
+                CurrentPage = 1;
             });
 
             _eventBus.Subscribe(_onCreated);
@@ -209,60 +211,55 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             _eventBus.Subscribe(_onDeleted);
             _eventBus.Subscribe(_onDeletedAll);
 
-            // Commands 
-            LoadCommand = new AsyncRelayCommand(async _ => await LoadData());
-            AddCommand = new AsyncRelayCommand(async _ => await GoToAddCustomer());
+            // Commands - all include CanExecute predicates so UI disables during load
 
-            DeleteCommand = new AsyncRelayCommand(async obj =>
+            LoadCommand = new AsyncRelayCommand(
+                async _ => await LoadDataAsync(),
+                _ => !IsLoading);
+
+            AddCommand = new AsyncRelayCommand(
+                async _ =>
+                {
+                    _navigationService.NavigateTo<AddCustomerViewModel>();
+                    await Task.CompletedTask;
+                },
+                _ => !IsLoading);
+
+            EditCommand = new AsyncRelayCommand(
+                async obj =>
+                {
+                    if (obj is not CustomerDto dto)
+                        return;
+                    _navigationService.NavigateTo<UpdateCustomerViewModel>(MapToUpdateDto(dto));
+                    await Task.CompletedTask;
+                },
+                obj => obj is CustomerDto && !IsLoading);
+
+            DeleteCommand = new AsyncRelayCommand(
+                async obj =>
             {
                 if (obj is CustomerDto customerDto)
+                    await DeleteCustomerAsync(customerDto);
+            },
+                obj => obj is CustomerDto && !IsLoading);
+
+            DeleteAllCommand = new AsyncRelayCommand(
+                async _ => await DeleteAllCustomersAsync(),
+                _ => !IsLoading && Customers.Any());
+
+            NavigateToPhonesCommand = new AsyncRelayCommand(
+                async obj =>
                 {
-                    await DeleteCustomer(customerDto);
-                }
-            });
-
-            DeleteAllCommand = new AsyncRelayCommand(async _ => await DeleteAllCustomers());
-
-            EditCommand = new AsyncRelayCommand(async obj =>
-            {
-                if (obj is CustomerDto customerDto)
-                {
-                    var updateCustomerDto = new UpdateCustomerDto
-                    {
-                        CustomerId = customerDto.CustomerId,
-                        CustomerName = customerDto.CustomerName,
-                        Email = customerDto.Email,
-                        Address = customerDto.Address,
-                        CustomerPhones = customerDto.Phones.Select(p => new CustomerPhoneDto
-                        {
-                            PhoneId = p.PhoneId,
-                            CustomerId = p.CustomerId,
-                            PhoneNumber = p.PhoneNumber,
-                            PhoneType = p.PhoneType,
-                            IsPrimary = p.IsPrimary
-                        }).ToList()
-                    };
-                    await GoToUpdateCustomer(updateCustomerDto);
-                }
-            });
-
-            NavigateToPhonesCommand = new AsyncRelayCommand(async obj =>
-            {
-                if (obj is CustomerDto customerDto)
-                {
-                    var customerPhoneDto = new CustomerPhoneDto
-                    {
-                        CustomerId = customerDto.CustomerId
-                    };
-                    await GoToCustomerPhones(customerPhoneDto);
-                }
-            });
-
+                    if (obj is not CustomerDto customerDto)
+                        return;
+                    _navigationService.NavigateTo<CustomerPhonesViewModel>(customerDto);
+                    await Task.CompletedTask;
+                },
+                obj => obj is CustomerDto && !IsLoading);
         }
 
-
-        // LoadData
-        private async Task LoadData()
+        // ---------------- Data Loading ------------------------------------------------
+        private async Task LoadDataAsync()
         {
             if (IsLoading)
                 return; // Guard against multiple concurrent loads
@@ -274,7 +271,11 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
                 IsLoading = true;
 
                 var result =
-                    await _customerService.GetAllAsync(CurrentPage, PageSize);
+                    await _customerService.GetAllAsync(
+                        CurrentPage,
+                        PageSize,
+                        SelectedSearchType,
+                        SearchText?.Trim());
 
                 if (result.IsSuccess)
                 {
@@ -284,10 +285,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
 
                     Customers.ReplaceRange(_allCustomers);
 
-                    int serverPages = pagedData?.TotalPages ?? 1;
-                    TotalPages = serverPages < 1 ? 1 : serverPages;
-
-                    // تحديث العدد الإجمالي إذا كان قادماً من السيرفر
+                    TotalPages = pagedData?.TotalPages ?? 1;
                     TotalCount = pagedData?.TotalCount ?? _allCustomers.Count;
                 }
                 else
@@ -297,7 +295,7 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Error: {ex.Message}";
+                ErrorMessage = $"Failed To Load Customers: {ex.Message}";
             }
             finally
             {
@@ -305,55 +303,48 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // Navigation To Add CustomerView
-        private Task GoToAddCustomer()
+        // لاعداة ضبط الصفحة عند بدء بحث جديد
+        private void ResetPageAndLoad()
         {
-            _navigationService.NavigateTo<AddCustomerViewModel>();
-            return Task.CompletedTask;
+            if (CurrentPage == 1)
+            {
+                _ = LoadDataAsync();
+            }
+            else
+            {
+                CurrentPage = 1;
+            }
         }
 
-        // Navigation To Update CustomerView 
-        private Task GoToUpdateCustomer(UpdateCustomerDto updateCustomerDto)
+        // ----------------------- Delete One & Delete All -------------------------------------------
+        private async Task DeleteCustomerAsync(CustomerDto customerDto)
         {
-            if (updateCustomerDto == null)
-                return Task.CompletedTask;
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
+                $"Are You Sure You Want To Delete \"{customerDto.CustomerName}\"?",
+                "Confirm Delete");
 
-            _navigationService.NavigateTo<UpdateCustomerViewModel>(updateCustomerDto);
-            return Task.CompletedTask;
-        }
-
-        private Task GoToCustomerPhones(CustomerPhoneDto customerPhoneDto)
-        {
-            _navigationService.NavigateTo<CustomerPhonesViewModel>(customerPhoneDto);
-            return Task.CompletedTask;
-        }
-
-        // Delete One Customer By Id
-        // when delete will be must delete from two list 
-        private async Task DeleteCustomer(CustomerDto customerDto)
-        {
-            var result = MessageBox.Show($"Are you sure you want to delete {customerDto.CustomerName}?",
-                                 "Confirm Delete",
-                                 MessageBoxButton.YesNo,
-                                 MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes)
+            if (!confirmed)
                 return;
 
             try
             {
                 IsLoading = true;
-                var response = await _customerService.DeleteAsync(customerDto.CustomerId);
 
-                if (response.IsSuccess)
+                var result = await _customerService.DeleteAsync(customerDto.CustomerId);
+
+                if (result.IsSuccess)
                 {
                     // EventBus يتولى الـ Reload — ما نحتاج نستدعي LoadData يدوياً
                     _eventBus.Publish(new CustomerDeletedEvent(customerDto.CustomerId));
                 }
                 else
                 {
-                    ErrorMessage = response.Error;
+                    ErrorMessage = result.Error;
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Delete failed: {ex.Message}";
             }
             finally
             {
@@ -361,33 +352,35 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // Delete All Customers
-        private async Task DeleteAllCustomers()
+        private async Task DeleteAllCustomersAsync()
         {
-            if (!_allCustomers.Any())
+            if (!Customers.Any())
                 return;
 
-            var result = MessageBox.Show("CRITICAL: Do you really want to wipe ALL records?",
-                                 "Delete All Confirmation",
-                                 MessageBoxButton.YesNo,
-                                 MessageBoxImage.Error);
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
+                "This Will Permanently Delete All Customer Records , This Cannot Be undone..",
+                "Delete All - Are You Sure?");
 
-            if (result != MessageBoxResult.Yes)
+            if (!confirmed)
                 return;
 
             try
             {
                 IsLoading = true;
-                var response = await _customerService.DeleteAllAsync();
+                var result = await _customerService.DeleteAllAsync();
 
-                if (response.IsSuccess)
+                if (result.IsSuccess)
                 {
                     _eventBus.Publish(new CustomerDeletedAllEvent());
                 }
                 else
                 {
-                    ErrorMessage = response.Error;
+                    ErrorMessage = result.Error;
                 }
+            }
+            catch(Exception ex)
+            {
+                ErrorMessage = $"Delete All Failed: {ex.Message}";
             }
             finally
             {
@@ -395,9 +388,25 @@ namespace OrderManagementSystem.Wpf.ViewModels.Customers
             }
         }
 
-        // ─────────────────────────────────────────
-        // CLEANUP — Unsubscribe عند إغلاق الـ ViewModel
-        // ─────────────────────────────────────────
+        // ---------------------------- Mapping ---------------------------------------
+        private static UpdateCustomerDto MapToUpdateDto(CustomerDto source) =>
+            new UpdateCustomerDto
+            {
+                CustomerId = source.CustomerId,
+                CustomerName = source.CustomerName,
+                Email = source.Email,
+                Address = source.Address,
+                CustomerPhones = source.Phones?.Select(p => new CustomerPhoneDto
+                {
+                    PhoneId = p.PhoneId,
+                    CustomerId = p.CustomerId,
+                    PhoneNumber = p.PhoneNumber,
+                    PhoneType = p.PhoneType,
+                    IsPrimary = p.IsPrimary
+                }).ToList() ?? new()
+            };
+
+        // -------------------------- Cleanup -----------------------------------------
         public void Dispose()
         {
             _eventBus.Unsubscribe(_onCreated);

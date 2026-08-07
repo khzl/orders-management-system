@@ -6,6 +6,13 @@
     <!-- Sidebar Menu Styles -->
     <Style x:Key="SidebarMenuStyle" TargetType="RadioButton">
         <Setter Property="Height" Value="45"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
@@ -13,54 +20,91 @@
                     <Border x:Name="border" Background="Transparent" CornerRadius="8" Margin="0,2">
 
                         <StackPanel Orientation="Horizontal" Margin="15,0">
+
                             <TextBlock x:Name="icon" Text="⊞" FontSize="18" VerticalAlignment="Center" 
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                             <ContentPresenter Margin="15,0,0,0" VerticalAlignment="Center"/>
+
                         </StackPanel>
+
                     </Border>
 
                     <ControlTemplate.Triggers>
+
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#F1F5F9"/>
+                            <Setter TargetName="border" Property="Background" 
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
                         </Trigger>
+
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter TargetName="icon" Property="Foreground" Value="White"/>
+                            <Setter TargetName="border" Property="Background" 
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter Property="Foreground" 
+                                    Value="{DynamicResource TextOnPrimaryBrush}"/>
+                            <Setter TargetName="icon" 
+                                    Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
                         </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                        </Trigger>
+
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="Medium"/>
     </Style>
 
+    
     <!-- ScrollViewer Styles -->
     <Style x:Key="ModernScrollBar" TargetType="ScrollBar">
+        
         <Setter Property="Width" Value="8"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
+            
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
                     <Grid x:Name="Bg" 
                           Background="{TemplateBinding Background}">
+                        
                         <Track x:Name="PART_Track" 
                                IsDirectionReversed="True" 
                                IsEnabled="{TemplateBinding IsMouseOver}">
+                            
                             <Track.Thumb>
                                 <Thumb>
                                     <Thumb.Template>
+                                        
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="#CBD5E1" CornerRadius="4" Margin="2,0"/>
+                                            
+                                            <Border x:Name="thumbBorder"
+                                                    Background="{DynamicResource TextDisabledBrush}"
+                                                    CornerRadius="4" Margin="2,0"/>
+
+                                            <ControlTemplate.Triggers>
+
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="thumbBorder"
+                                                            Property="Background"
+                                                            Value="{DynamicResource TextMutedBrush}"/>
+                                                </Trigger>
+
+                                                <Trigger Property="IsDragging" Value="True">
+                                                    <Setter TargetName="thumbBorder"
+                                                            Property="Background"
+                                                            Value="{DynamicResource SecondaryBrush}"/>
+                                                </Trigger>
+                                                
+                                            </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
                             </Track.Thumb>
                         </Track>
                     </Grid>
+                    
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Width" Value="10"/>
@@ -71,6 +115,7 @@
         </Setter>
     </Style>
 
+    
     <Style TargetType="ScrollViewer">
         <Setter Property="Template">
             <Setter.Value>
@@ -85,15 +130,20 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <ScrollContentPresenter Grid.Column="0" 
-                                                Grid.Row="0"/>
+                                                Grid.Row="0"
+                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        
                         <ScrollBar x:Name="PART_VerticalScrollBar"
-                                       Grid.Column="1" Value="{TemplateBinding VerticalOffset}" 
+                                       Grid.Column="1" Grid.Row="0" 
+                                       Value="{TemplateBinding VerticalOffset}" 
                                        Maximum="{TemplateBinding ScrollableHeight}"
                                        ViewportSize="{TemplateBinding ViewportHeight}" 
                                        Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" 
                                        Style="{StaticResource ModernScrollBar}"/>
+                        
                         <ScrollBar x:Name="PART_HorizontalScrollBar"
-                                       Grid.Row="1" Orientation="Horizontal" 
+                                       Grid.Column="0" Grid.Row="1"
+                                       Orientation="Horizontal" 
                                        Value="{TemplateBinding HorizontalOffset}" 
                                        Maximum="{TemplateBinding ScrollableWidth}" 
                                        ViewportSize="{TemplateBinding ViewportWidth}" 
@@ -105,11 +155,12 @@
         </Setter>
     </Style>
 
-    <!-- PageNumberButton Style -->
+    
+    <!-- PageNumberButton (Pagination)  Style -->
     <Style x:Key="PageNumberButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="#555555"/>
-        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Width" Value="40"/>
         <Setter Property="Height" Value="40"/>
@@ -117,29 +168,53 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                    <Border  x:Name="pageBorder"
+                             Background="{TemplateBinding Background}"
+                             BorderBrush="{TemplateBinding BorderBrush}"
+                             BorderThickness="{TemplateBinding BorderThickness}"
+                             CornerRadius="6">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
+
+                    <ControlTemplate.Triggers>
+
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="pageBorder" Property="Background"
+                                    Value="{DynamicResource SurfaceHoverBrush}"/>
+                            <Setter TargetName="pageBorder" Property="BorderBrush"
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="pageBorder" Property="Background"
+                                    Value="{DynamicResource PrimaryLightBrush}"/>
+                            <Setter TargetName="pageBorder" Property="BorderBrush"
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                        </Trigger>
+
+
+                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                            <Setter TargetName="pageBorder" Property="Background"
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter TargetName="pageBorder" Property="BorderBrush"
+                                    Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextOnPrimaryBrush}"/>
+                        </DataTrigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="pageBorder" Property="Opacity" Value="0.5"/>
+                        </Trigger>
+
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#F0F4F8"/>
-                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
-            </Trigger>
-            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                <Setter Property="Foreground" Value="White"/>
-                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
-            </DataTrigger>
-        </Style.Triggers>
     </Style>
     
     
